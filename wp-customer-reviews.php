@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.0.4
+ * Version:       1.0.5
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.0.4';
+    var $plugin_version = '1.0.5';
     var $dbtable = 'wpcreviews';
     var $path = 'wp-customer-reviews';
     var $wpversion = '';
@@ -50,7 +50,7 @@ class WPCustomerReviews
             add_action('admin_head', array(&$this, 'insert_rating_css'));
         }
 		
-	add_action('admin_menu', array(&$this, 'addmenu'));
+		add_action('admin_menu', array(&$this, 'addmenu'));
         add_action('wp_head', array(&$this, 'insert_rating_css'));
         add_filter('the_content', array(&$this, 'show_reviews'), 1);
         add_filter('the_content', array(&$this, 'aggregate_footer'), 1);
@@ -91,7 +91,7 @@ class WPCustomerReviews
             'show_aggregate_on' => 1,
             'show_hcard_on' => 1,
             'submit_button_text' => 'Submit your review',
-            'support_us' => 0,
+            'support_us' => 1,
             'version' => $this->plugin_version
         );
         $this->options = get_option('wpcr_options',$default_options);
@@ -131,14 +131,6 @@ class WPCustomerReviews
         if ($this->options['dbversion'] < 101) {
             $wpdb->query("ALTER TABLE `$this->dbtable` ADD `trash` TINYINT( 1 ) NOT NULL DEFAULT '0', ADD INDEX ( `trash` )");
             $this->options['dbversion'] = 101;
-            update_option('wpcr_options', $this->options);
-            $migrated = true;
-        }
-        
-        // upgrade to 1.0.4
-        if ($this->options['dbversion'] < 104) {
-            $this->options['support_us'] = 0;
-            $this->options['dbversion'] = 104;
             update_option('wpcr_options', $this->options);
             $migrated = true;
         }
@@ -490,14 +482,22 @@ class WPCustomerReviews
             </div>
         </div>';
     }
+	
+    function my_get_pages() {
+        global $wpdb;
+        // gets pages, even if hidden using a plugin
+        
+        $res = $wpdb->get_results("select ID, post_title from ". $wpdb->posts ." where post_status = 'publish' and post_type = 'page' order by ID");
+        return $res;
+    }
     
     function show_options() {
-        $pages = get_pages();
+        $pages = $this->my_get_pages();
         $selopt = '';
         foreach ($pages as $page) {
             $selected = '';
             if ($page->ID == $this->options['selected_pageid']) { $selected = ' selected'; }
-            $selopt = '<option'.$selected.' value="'.$page->ID.'">'.$page->post_title.'</option>';
+            $selopt .= '<option'.$selected.' value="'.$page->ID.'">'.$page->post_title.'</option>';
         }
 
         $su_checked = '';
@@ -1041,29 +1041,29 @@ class WPCustomerReviews
     function notify_activate($email,$act_flag) {  
         global $wp_version;
         
-        $request = 'doact='.$act_flag.'&email='.urlencode(stripslashes($email)).'&version='.$this->plugin_version;
+        $request = 'doact='.$act_flag.'&email='.urlencode(stripslashes($email)).'&version='.$this->plugin_version.'&support='.$this->options['support_us'];
         $host = "www.gowebsolutions.com";
         $port = 80;
         
         $http_request  = "POST /plugin-activation/activate.php HTTP/1.0\r\n";
-	$http_request .= "Host: www.gowebsolutions.com\r\n";
-	$http_request .= "Content-Type: application/x-www-form-urlencoded; charset=".get_option('blog_charset')."\r\n";
-	$http_request .= "Content-Length: ".strlen($request)."\r\n";
+		$http_request .= "Host: www.gowebsolutions.com\r\n";
+		$http_request .= "Content-Type: application/x-www-form-urlencoded; charset=".get_option('blog_charset')."\r\n";
+		$http_request .= "Content-Length: ".strlen($request)."\r\n";
         $http_request .= "Referer: $this->wpurl\r\n";
-	$http_request .= "User-Agent: WordPress/$wp_version\r\n\r\n";
-	$http_request .= $request;
+		$http_request .= "User-Agent: WordPress/$wp_version\r\n\r\n";
+		$http_request .= $request;
 
-	$response = '';
-	if( false != ( $fs = @fsockopen($host, $port, $errno, $errstr, 10) ) ) {
-            fwrite($fs, $http_request);
-            while ( !feof($fs) ) {
-                $response .= fgets($fs, 1160);
-            }
-            fclose($fs);
-            $response = explode("\r\n\r\n", $response, 2);
-	}
-        
-	return $response;
+		$response = '';
+		if( false != ( $fs = @fsockopen($host, $port, $errno, $errstr, 10) ) ) {
+			fwrite($fs, $http_request);
+			while ( !feof($fs) ) {
+				$response .= fgets($fs, 1160);
+			}
+			fclose($fs);
+			$response = explode("\r\n\r\n", $response, 2);
+		}
+			
+		return $response;
     }
     
     function set_gotosettings() {
