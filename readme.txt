@@ -36,6 +36,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 1.0.8 (02-15-2011) =
+* Some minor styling tweaks for better compatibility with various themes
+
 = 1.0.7 (02-15-2011) =
 * A couple of minor style tweaks for the chosen reviews page layout
 
@@ -71,5 +74,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 1.0.7 =
-1.0.6 and 1.0.7 fix some major bugs and compatibility issues. It is highly recommended to upgrade.
+= 1.0.8 =
+1.0.6 - 1.0.8 fix some major bugs and compatibility issues. It is highly recommended to upgrade.

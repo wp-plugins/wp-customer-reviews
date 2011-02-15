@@ -746,6 +746,7 @@ class WPCustomerReviews
             .wpcr_hide { display:none; }
             .wpcr_respond { margin:0 !important;; padding:0 !important;; }
             .wpcr_respond .awpcrform { display:block;height:1px;width:1px; }
+			#wpcr_commentform label { display:inline !important; }
             #wpcr_commentform #confirm1, #wpcr_commentform #confirm3 { display:none; }
             #wpcr_ad { background:#ffffff; }
             #wpcr_ad label { font-weight:bold; }
