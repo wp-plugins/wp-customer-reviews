@@ -26,6 +26,14 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 3. Create a WordPress page to be used specifically for gathering reviews or testimonials.
 4. Go into settings for WP Customer Reviews and configure the plugin.
 
+== Screenshots ==
+
+1. Admin Moderation of Comments
+2. Admin Options #1
+3. Admin Options #2
+4. Example of what visitors will see
+5. A visitor submitting a review
+
 == Changelog ==
 
 = 1.0.5 (02-13-2011) =
