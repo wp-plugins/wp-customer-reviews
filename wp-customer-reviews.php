@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.0.6
+ * Version:       1.0.7
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.0.6';
+    var $plugin_version = '1.0.7';
     var $dbtable = 'wpcreviews';
     var $path = 'wp-customer-reviews';
     var $wpversion = '';
@@ -898,7 +898,7 @@ class WPCustomerReviews
         
         $the_content .= $this->output_aggregate($reviews_content);   
         $the_content .= $this->show_reviews_form();
-        $the_content .= '<p style="padding-top:30px;">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></p>';
+        $the_content .= '<p style="padding-top:30px !important;">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></p>';
         $the_content .= '</div>';
              
         //$the_content = str_replace(array("\r","\n","\t","\r\n","  "),'',$the_content); /* minify */
@@ -973,7 +973,7 @@ class WPCustomerReviews
                     <p><label for="femail" class="comment-field"><small>Email:</small> <input class="text-input" type="text" id="femail" name="femail" value="'.$_POST['email'].'" /></label></p>
                     <p><label for="fwebsite" class="comment-field"><small>Website:</small> <input class="text-input" type="text" id="fwebsite" name="fwebaddy" value="'.$_POST['webaddy'].'" /></label></p>
                     <p><label for="ftitle" class="comment-field"><small>Review Title:</small> <input class="text-input" type="text" id="ftitle" name="ftitle" value="'.$_POST['title'].'" /></label></p>
-                    <div><div style="float:left;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;
+                    <div><div style="float:left;line-height:25px;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;
                     <div style="margin-left:5px;float:left;display:inline;">
                         <ul class="wrating nostar">
                             <li class="one"><a href="#" title="1 Star">1</a></li>
