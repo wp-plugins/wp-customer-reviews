@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.0.5
+ * Version:       1.0.6
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.0.5';
+    var $plugin_version = '1.0.6';
     var $dbtable = 'wpcreviews';
     var $path = 'wp-customer-reviews';
     var $wpversion = '';
@@ -50,7 +50,7 @@ class WPCustomerReviews
             add_action('admin_head', array(&$this, 'insert_rating_css'));
         }
 		
-		add_action('admin_menu', array(&$this, 'addmenu'));
+        add_action('admin_menu', array(&$this, 'addmenu'));
         add_action('wp_head', array(&$this, 'insert_rating_css'));
         add_filter('the_content', array(&$this, 'show_reviews'), 1);
         add_filter('the_content', array(&$this, 'aggregate_footer'), 1);
@@ -269,7 +269,7 @@ class WPCustomerReviews
         $trash_count = $wpdb->get_results("SELECT COUNT(*) AS count_trash FROM `$this->dbtable` WHERE status=2");
         $trash_count = $trash_count[0]->count_trash;
         ?>
-        <div class="wrap">
+        <div class="wrap wpcr_respond">
             <div class="icon32" id="icon-edit-comments"><br /></div>
             <h2>Customer Reviews</h2>
             
@@ -602,7 +602,7 @@ class WPCustomerReviews
         }
         
         echo '
-        <div class="wrap">
+        <div class="wrap wpcr_respond">
             <h2>WP Customer Reviews - Options</h2>';
             if ($msg) { echo '<h3 style="color:#a00;">'.$msg.'</h3>'; }
             echo '
@@ -650,13 +650,14 @@ class WPCustomerReviews
         return $this->got_page_reviews;
     }
     
-    function aggregate_footer($output) {
+    function aggregate_footer($output_original) {
         global $post;
         
-        $output .= $this->output_aggregate('');
+        $output2 = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>';
+        $output2 .= $this->output_aggregate('');
         
         if ($this->options['show_hcard_on'] && !$this->shown_it) {
-            $output .= '
+            $output2 .= '
             <div id="wpcr-hcard" class="vcard" style="display:none;">
                  <a class="url fn org" href="'.$this->options['business_url'].'">'.$this->options['business_name'].'</a>
                  <a class="email" href="mailto:'.$this->options['business_email'].'">'.$this->options['business_email'].'</a>
@@ -670,11 +671,15 @@ class WPCustomerReviews
                  <div class="tel">'.$this->options['business_phone'].'</div>
             </div>
             ';
+            
+            remove_filter('the_content', 'wpautop'); // keep wp from turning newlines into <p>
         }
         
         $this->shown_it = true;
         
-        echo $output;
+        //$output2 = str_replace(array("\r","\n","\t","\r\n","  "),'',$output2); /* minify */
+        
+        return $output_original.$output2; // return combined content
     }
     
     function output_aggregate($reviews_contents) {        
@@ -735,77 +740,94 @@ class WPCustomerReviews
     }
     
     function insert_rating_css($output) {	
-        $output .= '
+        $output2 = '
         <style type="text/css">
-		.wpcr_show { display:inline; }
-        .wpcr_hide { display:none; }
-        .awpcrform { display:block;height:1px;width:1px; }
-        #commentform #confirm1,#commentform #confirm3 { display:none; }
-		#wpcr_ad { background:#ffffff; }
-		#wpcr_ad label { font-weight:bold; }
-		#wpcr_submit_btn,#commentform #confirm2 { width:auto !important; }
-
-        .wrating, .wratingnh{
-            width:80px;
-            height:16px;
-            margin:4px 0 0 !important;
-            padding:0;
-            list-style:none;
-            clear:both;
-            float:left;
-            position:relative;
-            background: url('.$this->getpluginurl().'star-matrix.gif) no-repeat 0 0;
-        }
-        .nostar {background-position:0 0}
-        .onestar {background-position:0 -16px}
-        .twostar {background-position:0 -32px}
-        .threestar {background-position:0 -48px}
-        .fourstar {background-position:0 -64px}
-        .fivestar {background-position:0 -80px}
-        ul.wrating li, ul.wratingnh li {
-            cursor: pointer;
-            /*ie5 mac doesnt like it if the list is floated\*/
-            float:left;
-            /* end hide*/
-            text-indent:-999em;
-        }
-        ul.wrating li a, ul.wratingnh li a {
-            position:absolute;
-            left:0;
-            top:0;
-            width:16px;
-            height:16px;
-            text-decoration:none;
-            z-index: 200;
-            outline:none;
-        }
-        ul.wrating li.one a, ul.wratingnh li.one a {left:0}
-        ul.wrating li.two a, ul.wratingnh li.two a {left:16px;}
-        ul.wrating li.three a, ul.wratingnh li.three a {left:32px;}
-        ul.wrating li.four a, ul.wratingnh li.four a {left:48px;}
-        ul.wrating li.five a, ul.wratingnh li.five a {left:64px;}
-        ul.wrating li a:hover {
-            z-index:2;
-            width:80px;
-            height:16px;
-            overflow:hidden;
-            left:0;	
-            background: url('.$this->getpluginurl().'star-matrix.gif) no-repeat 0 0
-        }
-        ul.wrating li.one a:hover {background-position:0 -96px;}
-        ul.wrating li.two a:hover {background-position:0 -112px;}
-        ul.wrating li.three a:hover {background-position:0 -128px}
-        ul.wrating li.four a:hover {background-position:0 -144px}
-        ul.wrating li.five a:hover {background-position:0 -160px}
+            .wpcr_show { display:inline; }
+            .wpcr_hide { display:none; }
+            .wpcr_respond { margin:0 !important;; padding:0 !important;; }
+            .wpcr_respond .awpcrform { display:block;height:1px;width:1px; }
+            #wpcr_commentform #confirm1, #wpcr_commentform #confirm3 { display:none; }
+            #wpcr_ad { background:#ffffff; }
+            #wpcr_ad label { font-weight:bold; }
+            #wpcr_submit_btn,#wpcr_commentform #confirm2 { width:auto !important; }
+            .wpcr_respond p { 
+                margin:0 !important;
+                padding:0 !important;
+                line-height:100% !important;
+                margin-top:2px !important;
+                margin-bottom:2px !important;
+            }
+            .wpcr_respond ul li {
+                line-height: 100% !important;;
+                list-style: none !important;;
+                margin:0 !important;;
+                padding:0 !important;;
+            }
+            .wpcr_respond .wrating, .wpcr_respond .wratingnh {
+                width:80px;
+                height:16px;
+                margin:4px 0 0 !important;
+                padding:0;
+                list-style:none;
+                clear:both;
+                float:left;
+                position:relative;
+                background: url('.$this->getpluginurl().'star-matrix.gif) no-repeat 0 0;
+            }
+            .wpcr_respond .nostar {background-position:0 0}
+            .wpcr_respond .onestar {background-position:0 -16px}
+            .wpcr_respond .twostar {background-position:0 -32px}
+            .wpcr_respond .threestar {background-position:0 -48px}
+            .wpcr_respond .fourstar {background-position:0 -64px}
+            .wpcr_respond .fivestar {background-position:0 -80px}
+            .wpcr_respond ul.wrating li, .wpcr_respond ul.wratingnh li {
+                cursor: pointer;
+                float:left;
+                text-indent:-999em;
+            }
+            .wpcr_respond ul.wrating li a, .wpcr_respond ul.wratingnh li a {
+                position:absolute;
+                left:0;
+                top:0;
+                width:16px;
+                height:16px;
+                text-decoration:none;
+                z-index: 200;
+                outline:none;
+            }
+            .wpcr_respond ul.wrating li.one a, .wpcr_respond ul.wratingnh li.one a {left:0}
+            .wpcr_respond ul.wrating li.two a, .wpcr_respond ul.wratingnh li.two a {left:16px;}
+            .wpcr_respond ul.wrating li.three a, .wpcr_respond ul.wratingnh li.three a {left:32px;}
+            .wpcr_respond ul.wrating li.four a, .wpcr_respond ul.wratingnh li.four a {left:48px;}
+            .wpcr_respond ul.wrating li.five a, .wpcr_respond ul.wratingnh li.five a {left:64px;}
+            .wpcr_respond ul.wrating li a:hover {
+                z-index:2;
+                width:80px;
+                height:16px;
+                overflow:hidden;
+                left:0;	
+                background: url('.$this->getpluginurl().'star-matrix.gif) no-repeat 0 0
+            }
+            .wpcr_respond ul.wrating li.one a:hover {background-position:0 -96px;}
+            .wpcr_respond ul.wrating li.two a:hover {background-position:0 -112px;}
+            .wpcr_respond ul.wrating li.three a:hover {background-position:0 -128px}
+            .wpcr_respond ul.wrating li.four a:hover {background-position:0 -144px}
+            .wpcr_respond ul.wrating li.five a:hover {background-position:0 -160px}
         </style>';
         
-        echo $output;
+        $output2 = str_replace(array("\r","\n","\t","\r\n","  "),'',$output2); /* minify */
+        
+        echo $output2; // return combined content, ACTION does not need to return, but echo instead
     }
 
-    function show_reviews($the_content) {
+    function show_reviews($the_content_original) {
         global $post;
 
-        if ($this->options['selected_pageid'] != $post->ID) { return $the_content; }
+        if ($this->options['selected_pageid'] != $post->ID) { return $the_content_original; }
+        
+        remove_filter('the_content', 'wpautop'); // keep wp from turning our newlines into <p>
+        
+        $the_content = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>'; // our content
         
         $msg = '';
         if ($_POST['submitwpcr_'.$post->ID] == $this->options['submit_button_text']) {
@@ -815,6 +837,8 @@ class WPCustomerReviews
         if ($msg) {
             $the_content .= $msg;
         }
+        
+        $the_content .= '<div id="wpcr_cust_reviews" class="wpcr_respond">';
         
         $the_content .= '<p><a href="#wpcrform">'.$this->options['goto_leave_text'].'</a></p><hr />';
         
@@ -875,8 +899,11 @@ class WPCustomerReviews
         $the_content .= $this->output_aggregate($reviews_content);   
         $the_content .= $this->show_reviews_form();
         $the_content .= '<p style="padding-top:30px;">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></p>';
-
-        return $the_content;
+        $the_content .= '</div>';
+             
+        //$the_content = str_replace(array("\r","\n","\t","\r\n","  "),'',$the_content); /* minify */
+        
+        return $the_content_original.$the_content; // return combined content
     }
     
     function get_rating_class($rating) {
@@ -891,15 +918,15 @@ class WPCustomerReviews
     function show_reviews_form() {
         global $post;
         
-        $script = '<script type="text/javascript">                    
+        $script = '<script type="text/javascript">
                     function valwpcrform(me) {	
-						var frating = parseInt(jQuery("#frating").val());
-						if (!frating) { frating = 0; }
-					
-						if (jQuery("#wpcr_fname").val() == "") {
-							alert("You must include your name.");
+                        var frating = parseInt(jQuery("#frating").val());
+                        if (!frating) { frating = 0; }
+
+                        if (jQuery("#wpcr_fname").val() == "") {
+                            alert("You must include your name.");
                             return false;
-						}
+                        }
                         if (jQuery("#confirm2").is(":checked") == false) {
                             alert("You must confirm that you are human.");
                             return false;
@@ -908,10 +935,10 @@ class WPCustomerReviews
                             alert("You must confirm that you are human. Code 2.");
                             return false;
                         }						
-						if (frating < 1 || frating > 5) {
-							alert("Please select a star rating from 1 to 5.");
+                        if (frating < 1 || frating > 5) {
+                            alert("Please select a star rating from 1 to 5.");
                             return false;
-						}
+                        }
 						
                         jQuery(me).attr("action","");
                         return true;
@@ -936,42 +963,42 @@ class WPCustomerReviews
                         return false;
                     });
                 </script>';
-        $script = str_replace(array("\r","\n","\t","  "),array('','','',''),$script);
         
         return '
-            <div id="respond">
+            <div id="wpcr_respond" class="wpcr_respond">
                 <a id=\'wpcrform\' class=\'awpcrform\'></a>
-                <h4 id=\'postcomment\'>'.$this->options['leave_text'].'</h4>
-                <form onsubmit=\'return valwpcrform(this);\' class=\'wpcrcform\' id=\'commentform\' method="post" action="'.trailingslashit($this->wpurl).'nospam/">
+                <h4 id=\'wpcr_postcomment\'>'.$this->options['leave_text'].'</h4>
+                <form onsubmit=\'return valwpcrform(this);\' class=\'wpcrcform\' id=\'wpcr_commentform\' method="post" action="'.trailingslashit($this->wpurl).'nospam/">
                     <p><label for="wpcr_fname" class="comment-field"><small>Name:</small> <input class="text-input" type="text" id="wpcr_fname" name="fname" value="'.$_POST['name'].'" /></label></p>
                     <p><label for="femail" class="comment-field"><small>Email:</small> <input class="text-input" type="text" id="femail" name="femail" value="'.$_POST['email'].'" /></label></p>
                     <p><label for="fwebsite" class="comment-field"><small>Website:</small> <input class="text-input" type="text" id="fwebsite" name="fwebaddy" value="'.$_POST['webaddy'].'" /></label></p>
                     <p><label for="ftitle" class="comment-field"><small>Review Title:</small> <input class="text-input" type="text" id="ftitle" name="ftitle" value="'.$_POST['title'].'" /></label></p>
-                    <div><div style="float:left;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;<div style="margin-left:5px;float:left;display:inline;">
-                            <ul class="wrating nostar">
-                                <li class="one"><a href="#" title="1 Star">1</a></li>
-                                <li class="two"><a href="#" title="2 Stars">2</a></li>
-                                <li class="three"><a href="#" title="3 Stars">3</a></li>
-                                <li class="four"><a href="#" title="4 Stars">4</a></li>
-                                <li class="five"><a href="#" title="5 Stars">5</a></li>
-                            </ul>
-                        </div>
-                        <div style="clear:both;"></div>
-                        <input type="hidden" id="frating" name="frating" value="'.$_POST['frating'].'" />
+                    <div><div style="float:left;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;
+                    <div style="margin-left:5px;float:left;display:inline;">
+                        <ul class="wrating nostar">
+                            <li class="one"><a href="#" title="1 Star">1</a></li>
+                            <li class="two"><a href="#" title="2 Stars">2</a></li>
+                            <li class="three"><a href="#" title="3 Stars">3</a></li>
+                            <li class="four"><a href="#" title="4 Stars">4</a></li>
+                            <li class="five"><a href="#" title="5 Stars">5</a></li>
+                        </ul>
+                    </div>
+                    <div style="clear:both;"></div>
+                    <input type="hidden" id="frating" name="frating" value="'.$_POST['frating'].'" />
                     </div>
                     <p><label for="ftext" class="comment-field"><small>Review:</small></label></p>
                     <div>
                         <textarea id="ftext" name="ftext" cols="50" rows="10">'.$_POST['text'].'</textarea><br />
                     </div>
-					<div style="margin-top:10px;">
-						<div style="font-size:13px;color:#c00;margin-bottom:4px;">
-							<input type="checkbox" name="fconfirm1" id="confirm1" value="1" />
-							<input type="checkbox" name="fconfirm2" id="confirm2" value="1" />&nbsp;<label for="confirm2">Check this box to confirm you are human.</label>
-							<input type="checkbox" name="fconfirm3" id="confirm3" value="1" />
-						</div>
-						<input id="wpcr_submit_btn" name="submitwpcr_'.$post->ID.'" type="submit" id="submit" value="'.$this->options['submit_button_text'].'" />
-					</div>
-					<div style="clear:both;"></div>
+                    <div style="margin-top:10px;">
+                        <div style="font-size:13px;color:#c00;margin-bottom:4px;">
+                            <input type="checkbox" name="fconfirm1" id="confirm1" value="1" />
+                            <input type="checkbox" name="fconfirm2" id="confirm2" value="1" />&nbsp;<label for="confirm2">Check this box to confirm you are human.</label>
+                            <input type="checkbox" name="fconfirm3" id="confirm3" value="1" />
+                        </div>
+                        <input id="wpcr_submit_btn" name="submitwpcr_'.$post->ID.'" type="submit" value="'.$this->options['submit_button_text'].'" />
+                    </div>
+                    <div style="clear:both;"></div>
                 </form>
                 '.$script.'
             </div>
@@ -1046,24 +1073,24 @@ class WPCustomerReviews
         $port = 80;
         
         $http_request  = "POST /plugin-activation/activate.php HTTP/1.0\r\n";
-		$http_request .= "Host: www.gowebsolutions.com\r\n";
-		$http_request .= "Content-Type: application/x-www-form-urlencoded; charset=".get_option('blog_charset')."\r\n";
-		$http_request .= "Content-Length: ".strlen($request)."\r\n";
+        $http_request .= "Host: www.gowebsolutions.com\r\n";
+        $http_request .= "Content-Type: application/x-www-form-urlencoded; charset=".get_option('blog_charset')."\r\n";
+        $http_request .= "Content-Length: ".strlen($request)."\r\n";
         $http_request .= "Referer: $this->wpurl\r\n";
-		$http_request .= "User-Agent: WordPress/$wp_version\r\n\r\n";
-		$http_request .= $request;
+        $http_request .= "User-Agent: WordPress/$wp_version\r\n\r\n";
+        $http_request .= $request;
 
-		$response = '';
-		if( false != ( $fs = @fsockopen($host, $port, $errno, $errstr, 10) ) ) {
-			fwrite($fs, $http_request);
-			while ( !feof($fs) ) {
-				$response .= fgets($fs, 1160);
-			}
-			fclose($fs);
-			$response = explode("\r\n\r\n", $response, 2);
-		}
-			
-		return $response;
+        $response = '';
+        if( false != ( $fs = @fsockopen($host, $port, $errno, $errstr, 10) ) ) {
+            fwrite($fs, $http_request);
+            while ( !feof($fs) ) {
+                $response .= fgets($fs, 1160);
+            }
+            fclose($fs);
+            $response = explode("\r\n\r\n", $response, 2);
+        }
+
+        return $response;
     }
     
     function set_gotosettings() {
