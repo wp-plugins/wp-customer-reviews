@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.0.8
+ * Version:       1.0.9
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.0.8';
+    var $plugin_version = '1.0.9';
     var $dbtable = 'wpcreviews';
     var $path = 'wp-customer-reviews';
     var $wpversion = '';
@@ -573,7 +573,7 @@ class WPCustomerReviews
 						<br /><br />
 						<label for="submit_button_text">Text to use for review form submit button: </label><input style="width:150px;" type="text" id="submit_button_text" name="submit_button_text" value="'.$this->options['submit_button_text'].'" />
 						<br /><br />
-                                                <input id="support_wpcr" name="support_wpcr" type="checkbox"'.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
+                                                <input id="support_wpcr" name="support_wpcr" type="checkbox"'.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
 						<br />
                                                 <div class="submit"><input type="submit" class="button-primary" value="Save Changes" name="Submit"></div>
 					</div>
@@ -900,7 +900,7 @@ class WPCustomerReviews
         
         $the_content .= $this->output_aggregate($reviews_content);   
         $the_content .= $this->show_reviews_form();
-        $the_content .= '<p style="padding-top:30px !important;">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></p>';
+        $the_content .= '<p style="padding-top:30px !important;font-size:10px;">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></p>';
         $the_content .= '</div>';
              
         //$the_content = str_replace(array("\r","\n","\t","\r\n","  "),'',$the_content); /* minify */

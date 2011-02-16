@@ -34,7 +34,14 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 4. Example of what visitors will see
 5. A visitor submitting a review
 
+== Frequently Asked Questions ==
+* If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
+
 == Changelog ==
+
+= 1.0.9 (%%%%%%%%) =
+* 
+* Made "powered by" link use a smaller font size
 
 = 1.0.8 (02-15-2011) =
 * Some minor styling tweaks for better compatibility with various themes
