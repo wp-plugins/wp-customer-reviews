@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.0.9
+ * Version:       1.1.0
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.0.9';
+    var $plugin_version = '1.1.0';
     var $dbtable = 'wpcreviews';
     var $path = 'wp-customer-reviews';
     var $wpversion = '';
@@ -960,7 +960,7 @@ class WPCustomerReviews
                         return true;
                     };
                     
-                    jQuery(".wpcr_rate a").live("click",function() {
+                    jQuery(".wpcr_rate a").click(function() {
                         var b = jQuery(this).parent().find("b");
                         var wpcr_rating = jQuery(this).html();
 						/* reverse order , 5 is 1, 1 is 5 */
