@@ -45,10 +45,6 @@ class WPCustomerReviews
 
         $this->get_options(); // populate the options array
         $this->check_migrate(); // call on every instance to see if we have upgraded in any way
-
-        if (!isset($_REQUEST['noheader'])) {
-            add_action('admin_head', array(&$this, 'insert_rating_css'));
-        }
 		
         add_action('admin_menu', array(&$this, 'addmenu'));
         add_action('wp_head', array(&$this, 'insert_rating_css'));
@@ -90,6 +86,8 @@ class WPCustomerReviews
             'selected_pageid' => -1,
             'show_aggregate_on' => 1,
             'show_hcard_on' => 1,
+			'star_hover_color' => '#01B509',
+			'star_on_color' => '#FDCE30',
             'submit_button_text' => 'Submit your review',
             'support_us' => 1,
             'version' => $this->plugin_version
@@ -268,8 +266,10 @@ class WPCustomerReviews
         
         $trash_count = $wpdb->get_results("SELECT COUNT(*) AS count_trash FROM `$this->dbtable` WHERE status=2");
         $trash_count = $trash_count[0]->count_trash;
+		
+		$this->insert_rating_css();
         ?>
-        <div class="wrap wpcr_respond">
+        <div id="wpcr_respond" class="wrap">
             <div class="icon32" id="icon-edit-comments"><br /></div>
             <h2>Customer Reviews</h2>
             
@@ -351,13 +351,14 @@ class WPCustomerReviews
                             <a href="mailto:<?php echo $review->reviewer_email; ?>"><?php echo $review->reviewer_email; ?></a><br />
                             <a href="?page=view_reviews&amp;s=<?php echo $review->reviewer_ip; ?>"><?php echo $review->reviewer_ip; ?></a><br />
                             <div style="margin-left:0px;">
-                                <ul class="wratingnh <?php echo $this->get_rating_class($review->review_rating); ?>">
-                                    <li class="one"><a href="#" title="1 Star">1</a></li>
-                                    <li class="two"><a href="#" title="2 Stars">2</a></li>
-                                    <li class="three"><a href="#" title="3 Stars">3</a></li>
-                                    <li class="four"><a href="#" title="4 Stars">4</a></li>
-                                    <li class="five"><a href="#" title="5 Stars">5</a></li>
-                                </ul>
+								<div class="wpcr_rate wpcr_noclick">
+									<b style="width:<?php echo $this->get_rating_width($review->review_rating); ?>%;"></b>
+									<a href="#">1</a>
+									<a href="#">2</a>
+									<a href="#">3</a>
+									<a href="#">4</a>
+									<a href="#">5</a>
+								</div>
                             </div>
                         </td>
                         <td class="comment column-comment">
@@ -429,7 +430,7 @@ class WPCustomerReviews
             // quick update of all options needed
             foreach ($_REQUEST as $col => $val) {
                 if (isset($this->options[$col])) {
-                    $updated_options[$col] = $val;
+                    $updated_options[$col] = trim($val);
                 }
             }
             
@@ -438,6 +439,14 @@ class WPCustomerReviews
             $updated_options['show_aggregate_on'] = intval($_REQUEST['show_aggregate_on']);
             $updated_options['show_hcard_on'] = intval($_REQUEST['show_hcard_on']);
             $updated_options['support_us'] = intval($_REQUEST['support_wpcr']);
+			
+			// some star color validation
+			if ($updated_options['star_on_color'] == '') { $updated_options['star_on_color'] = '#FDCE30'; }
+			if ($updated_options['star_hover_color'] == '') { $updated_options['star_hover_color'] = '#01B509'; }			
+			if (substr($updated_options['star_on_color'],0,1) != '#') { $updated_options['star_on_color'] = '#'.$updated_options['star_on_color']; }
+			if (substr($updated_options['star_hover_color'],0,1) != '#') { $updated_options['star_hover_color'] = '#'.$updated_options['star_hover_color']; }
+			$updated_options['star_on_color'] = strtoupper($updated_options['star_on_color']);
+			$updated_options['star_hover_color'] = strtoupper($updated_options['star_hover_color']);
 			
             // disable comments, trackbacks on the selected page
             $query = "UPDATE {$wpdb->prefix}posts SET comment_status = 'closed', ping_status = 'closed' WHERE ID = ".$updated_options['selected_pageid'];
@@ -573,9 +582,40 @@ class WPCustomerReviews
 						<br /><br />
 						<label for="submit_button_text">Text to use for review form submit button: </label><input style="width:150px;" type="text" id="submit_button_text" name="submit_button_text" value="'.$this->options['submit_button_text'].'" />
 						<br /><br />
-                                                <input id="support_wpcr" name="support_wpcr" type="checkbox"'.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
+						<div style="float:left;">
+							<label for="star_on_color"><a title="Color Picker" target="_blank" href="http://www.w3schools.com/tags/ref_colorpicker.asp">HTML color</a> for <span style="color:#060;">displaying</span> rating: </label><input style="width:80px;" type="text" id="star_on_color" name="star_on_color" value="'.$this->options['star_on_color'].'" />
+						</div>
+						<div style="float:left;margin-left:5px;">
+							<div class="wpcr_rate wpcr_noclick">
+								<b style="width:60%;"></b>
+								<a href="javascript:void(0);">1</a>
+								<a href="javascript:void(0);">2</a>
+								<a href="javascript:void(0);">3</a>
+								<a href="javascript:void(0);">4</a>
+								<a href="javascript:void(0);">5</a>
+							</div>
+						</div>
+						<div style="float:left;margin-left:5px;font-size:10px;margin-top:6px;">(Leave blank to reset)</div>
+						<div style="clear:both;"></div>
+						<div style="float:left;">
+							<label for="star_on_color"><a title="Color Picker" target="_blank" href="http://www.w3schools.com/tags/ref_colorpicker.asp">HTML color</a> for <span style="color:#060;">picking</span> rating: </label><input style="width:80px;" type="text" id="star_hover_color" name="star_hover_color" value="'.$this->options['star_hover_color'].'" />
+						</div>
+						<div style="float:left;margin-left:28px;">
+							<div class="wpcr_rate">
+								<b style="width:0%;"></b>
+								<a href="javascript:void(0);">1</a>
+								<a href="javascript:void(0);">2</a>
+								<a href="javascript:void(0);">3</a>
+								<a href="javascript:void(0);">4</a>
+								<a href="javascript:void(0);">5</a>
+							</div>
+						</div>
+						<div style="float:left;margin-left:5px;font-size:10px;margin-top:6px;">(Hover for example)</div>
+						<div style="clear:both;"></div>
+						<br /><br />
+						<input id="support_wpcr" name="support_wpcr" type="checkbox"'.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
 						<br />
-                                                <div class="submit"><input type="submit" class="button-primary" value="Save Changes" name="Submit"></div>
+						<div class="submit"><input type="submit" class="button-primary" value="Save Changes" name="Submit"></div>
 					</div>
                 </form>
                 <br />
@@ -590,7 +630,7 @@ class WPCustomerReviews
         }
 
         $msg = '';
-        
+        		
         if ($_REQUEST['Submit'] == 'Save Changes')
         {
             $msg = $this->update_options();
@@ -601,9 +641,11 @@ class WPCustomerReviews
             $msg = $this->update_options();
             $this->get_options();
         }
+		
+		$this->insert_rating_css();
         
         echo '
-        <div class="wrap wpcr_respond">
+        <div id="wpcr_respond" class="wrap">
             <h2>WP Customer Reviews - Options</h2>';
             if ($msg) { echo '<h3 style="color:#a00;">'.$msg.'</h3>'; }
             echo '
@@ -740,81 +782,56 @@ class WPCustomerReviews
         return (substr($date, 0, strlen($date)-2).':'.substr($date, -2));
     }
     
-    function insert_rating_css($output) {	
+    function insert_rating_css() {	
         $output2 = '
         <style type="text/css">
             .wpcr_show { display:inline; }
             .wpcr_hide { display:none; }
-            .wpcr_respond { margin:0 !important;; padding:0 !important;; }
-            .wpcr_respond .awpcrform { display:block;height:1px;width:1px; }
+            #wpcr_respond { margin:0 !important;; padding:0 !important;; }
+            #wpcr_respond .awpcrform { display:block;height:1px;width:1px; }
 			#wpcr_commentform label { display:inline !important; }
             #wpcr_commentform #confirm1, #wpcr_commentform #confirm3 { display:none; }
             #wpcr_ad { background:#ffffff; }
             #wpcr_ad label { font-weight:bold; }
             #wpcr_submit_btn,#wpcr_commentform #confirm2 { width:auto !important; }
-            .wpcr_respond p { 
+            #wpcr_respond p { 
                 margin:0 !important;
                 padding:0 !important;
-                line-height:100% !important;
+                line-height:120% !important;
                 margin-top:2px !important;
                 margin-bottom:2px !important;
-            }
-            .wpcr_respond ul li {
-                line-height: 100% !important;;
-                list-style: none !important;;
-                margin:0 !important;;
-                padding:0 !important;;
-            }
-            .wpcr_respond .wrating, .wpcr_respond .wratingnh {
-                width:80px;
-                height:16px;
-                margin:4px 0 0 !important;
-                padding:0;
-                list-style:none;
-                clear:both;
-                float:left;
-                position:relative;
-                background: url('.$this->getpluginurl().'star-matrix.gif) no-repeat 0 0;
-            }
-            .wpcr_respond .nostar {background-position:0 0}
-            .wpcr_respond .onestar {background-position:0 -16px}
-            .wpcr_respond .twostar {background-position:0 -32px}
-            .wpcr_respond .threestar {background-position:0 -48px}
-            .wpcr_respond .fourstar {background-position:0 -64px}
-            .wpcr_respond .fivestar {background-position:0 -80px}
-            .wpcr_respond ul.wrating li, .wpcr_respond ul.wratingnh li {
-                cursor: pointer;
-                float:left;
-                text-indent:-999em;
-            }
-            .wpcr_respond ul.wrating li a, .wpcr_respond ul.wratingnh li a {
-                position:absolute;
-                left:0;
-                top:0;
-                width:16px;
-                height:16px;
-                text-decoration:none;
-                z-index: 200;
-                outline:none;
-            }
-            .wpcr_respond ul.wrating li.one a, .wpcr_respond ul.wratingnh li.one a {left:0}
-            .wpcr_respond ul.wrating li.two a, .wpcr_respond ul.wratingnh li.two a {left:16px;}
-            .wpcr_respond ul.wrating li.three a, .wpcr_respond ul.wratingnh li.three a {left:32px;}
-            .wpcr_respond ul.wrating li.four a, .wpcr_respond ul.wratingnh li.four a {left:48px;}
-            .wpcr_respond ul.wrating li.five a, .wpcr_respond ul.wratingnh li.five a {left:64px;}
-            .wpcr_respond ul.wrating li a:hover {
-                z-index:2;
-                width:80px;
-                height:16px;
-                overflow:hidden;
-                left:0;	
-                background: url('.$this->getpluginurl().'star-matrix.gif) no-repeat 0 0
-            }
-            .wpcr_respond ul.wrating li.one a:hover {background-position:0 -96px;}
-            .wpcr_respond ul.wrating li.two a:hover {background-position:0 -112px;}
-            .wpcr_respond ul.wrating li.three a:hover {background-position:0 -128px}
-            .wpcr_respond ul.wrating li.four a:hover {background-position:0 -144px}
-            .wpcr_respond ul.wrating li.five a:hover {background-position:0 -160px}
+            }			
+			#wpcr_respond .wpcr_rate {
+				margin:0 !important;
+				padding:0 !important;
+			}
+			#wpcr_respond .wpcr_rate, #wpcr_respond .wpcr_rate b, #wpcr_respond .wpcr_rate a {
+				 width: 100px; /* = total width of the stars (5 * 20px) */
+				 height: 20px;
+				 overflow: hidden;
+				 background: url('.$this->getpluginurl().'star.gif) repeat-x;
+			}
+			#wpcr_respond .wpcr_rate b {
+				 float: left;
+				 margin-bottom: -100%;
+				 background-color:'.$this->options['star_on_color'].';
+			}
+			#wpcr_respond .wpcr_rate a {
+				 float: right;
+				 margin-left: -80px; // = total width minus one star (100px - 20px)
+				 text-indent: -1000%;
+			}
+			#wpcr_respond .wpcr_rate a:hover {
+				 background-color:'.$this->options['star_hover_color'].';
+			}
+			
+			#wpcr_respond .wpcr_rate.wpcr_noclick a {
+				cursor:default;
+			}
+			
+			#wpcr_respond .wpcr_rate.wpcr_noclick a:hover {
+				background-color:transparent !important;
+			}
         </style>';
         
         $output2 = str_replace(array("\r","\n","\t","\r\n","  "),'',$output2); /* minify */
@@ -840,7 +857,7 @@ class WPCustomerReviews
             $the_content .= $msg;
         }
         
-        $the_content .= '<div id="wpcr_cust_reviews" class="wpcr_respond">';
+        $the_content .= '<div id="wpcr_respond">';
         
         $the_content .= '<p><a href="#wpcrform">'.$this->options['goto_leave_text'].'</a></p><hr />';
         
@@ -854,19 +871,20 @@ class WPCustomerReviews
             $scores[] = 0;
         } else {            
             foreach ($reviews as $review)
-            {
+            {			
                 $reviews_content .= '
                 <div id="review_'.$review->id.'">
                     <div class="hreview" id="hreview-'.$review->id.'">
                         <h2 class="summary">'.$review->review_title.'</h2>
                         <div style="float:left;padding-right:10px;">
-                            <ul class="wratingnh '.$this->get_rating_class($review->review_rating).'">
-                                <li class="one"><a href="#" title="1 Star">1</a></li>
-                                <li class="two"><a href="#" title="2 Stars">2</a></li>
-                                <li class="three"><a href="#" title="3 Stars">3</a></li>
-                                <li class="four"><a href="#" title="4 Stars">4</a></li>
-                                <li class="five"><a href="#" title="5 Stars">5</a></li>
-                            </ul>
+							<div class="wpcr_rate wpcr_noclick">
+								<b style="width:'.$this->get_rating_width($review->review_rating).'%;"></b>
+								<a href="#">1</a>
+								<a href="#">2</a>
+								<a href="#">3</a>
+								<a href="#">4</a>
+								<a href="#">5</a>
+							</div> 							
                         </div>
                         <div style="float:left;">
                             <abbr title="'.$this->iso8601(strtotime($review->date_time)).'" class="dtreviewed">'.date("M d, Y",strtotime($review->date_time)).'</abbr> by <span class="reviewer vcard" id="hreview-wpcr-reviewer-'.$review->id.'"><span class="fn">'.$review->reviewer_name.'</span></span>
@@ -908,13 +926,9 @@ class WPCustomerReviews
         return $the_content_original.$the_content; // return combined content
     }
     
-    function get_rating_class($rating) {
-        if ($rating == 1) { return 'onestar'; }
-        if ($rating == 2) { return 'twostar'; }
-        if ($rating == 3) { return 'threestar'; }
-        if ($rating == 4) { return 'fourstar'; }
-        if ($rating == 5) { return 'fivestar'; }
-        return 'onestar';
+    function get_rating_width($rating) {
+        $rating_width = 20 * $rating; /* 20% for each star if having 5 stars */
+		return $rating_width;
     }
     
     function show_reviews_form() {
@@ -946,28 +960,24 @@ class WPCustomerReviews
                         return true;
                     };
                     
-                    jQuery(".wrating a").live("click",function() {
-                        var p = jQuery(this).parent().parent();
-                        p.removeClass("nostar");
-                        p.removeClass("onestar");
-                        p.removeClass("twostar");
-                        p.removeClass("threestar");
-                        p.removeClass("fourstar");
-                        p.removeClass("fivestar");
-                        
+                    jQuery(".wpcr_rate a").live("click",function() {
+                        var b = jQuery(this).parent().find("b");
                         var wpcr_rating = jQuery(this).html();
+						/* reverse order , 5 is 1, 1 is 5 */
+						if (wpcr_rating == 1) { wpcr_rating = 5; }
+						else if (wpcr_rating == 2) { wpcr_rating = 4; }
+						else if (wpcr_rating == 3) { wpcr_rating = 3; }
+						else if (wpcr_rating == 4) { wpcr_rating = 2; }
+						else if (wpcr_rating == 5) { wpcr_rating = 1; }
+						var rating_width = 20 * wpcr_rating;
                         jQuery("#frating").val(wpcr_rating);
-                        if (wpcr_rating == 1) { p.addClass("onestar"); }
-                        if (wpcr_rating == 2) { p.addClass("twostar"); }
-                        if (wpcr_rating == 3) { p.addClass("threestar"); }
-                        if (wpcr_rating == 4) { p.addClass("fourstar"); }
-                        if (wpcr_rating == 5) { p.addClass("fivestar"); }
+						b.css("width",rating_width+"%");
                         return false;
                     });
                 </script>';
         
         return '
-            <div id="wpcr_respond" class="wpcr_respond">
+            <div id="wpcr_respond">
                 <a id=\'wpcrform\' class=\'awpcrform\'></a>
                 <h4 id=\'wpcr_postcomment\'>'.$this->options['leave_text'].'</h4>
                 <form onsubmit=\'return valwpcrform(this);\' class=\'wpcrcform\' id=\'wpcr_commentform\' method="post" action="'.trailingslashit($this->wpurl).'nospam/">
@@ -977,13 +987,14 @@ class WPCustomerReviews
                     <p><label for="ftitle" class="comment-field"><small>Review Title:</small> <input class="text-input" type="text" id="ftitle" name="ftitle" value="'.$_POST['title'].'" /></label></p>
                     <div><div style="float:left;line-height:25px;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;
                     <div style="margin-left:5px;float:left;display:inline;">
-                        <ul class="wrating nostar">
-                            <li class="one"><a href="#" title="1 Star">1</a></li>
-                            <li class="two"><a href="#" title="2 Stars">2</a></li>
-                            <li class="three"><a href="#" title="3 Stars">3</a></li>
-                            <li class="four"><a href="#" title="4 Stars">4</a></li>
-                            <li class="five"><a href="#" title="5 Stars">5</a></li>
-                        </ul>
+                        <div class="wpcr_rate">
+							<b style="width:0%;"></b>
+							<a href="#">1</a>
+							<a href="#">2</a>
+							<a href="#">3</a>
+							<a href="#">4</a>
+							<a href="#">5</a>
+						</div>
                     </div>
                     <div style="clear:both;"></div>
                     <input type="hidden" id="frating" name="frating" value="'.$_POST['frating'].'" />
@@ -1102,6 +1113,8 @@ class WPCustomerReviews
     function redirect_settings() {
         if (get_option('wpcr_gotosettings', false)) {
             delete_option('wpcr_gotosettings');
+			
+			if ($_GET['action'] == 'activate-plugin') { return false; } /* no auto settings redirect if upgrading */
             
             // get the real wp-admin path, even if renamed
             $admin_path = $_SERVER['REQUEST_URI'];            
