@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.1.2
+ * Version:       1.1.3
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,14 +28,18 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.1.2';
+    var $plugin_version = '1.1.3';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $wpurl = '';
     var $got_page_reviews = false;
     var $shown_it = false;
 
-    function WPCustomerReviews() {		
+    function WPCustomerReviews() {
+		global $table_prefix;
+        $this->dbtable = $table_prefix.$this->dbtable;
+        $this->wpurl = get_bloginfo('wpurl');
+		
         add_filter('the_content', array(&$this, 'show_reviews'), 1);
         add_filter('the_content', array(&$this, 'aggregate_footer'), 1);
 		add_filter('plugin_action_links_'.plugin_basename(__FILE__), array(&$this, 'plugin_settings_link'));
@@ -260,7 +264,7 @@ class WPCustomerReviews
         $trash_count = $wpdb->get_results("SELECT COUNT(*) AS count_trash FROM `$this->dbtable` WHERE status=2");
         $trash_count = $trash_count[0]->count_trash;
         ?>
-        <div id="wpcr_respond" class="wrap">
+        <div id="wpcr_respond_1" class="wrap">
             <div class="icon32" id="icon-edit-comments"><br /></div>
             <h2>Customer Reviews</h2>
             
@@ -343,7 +347,7 @@ class WPCustomerReviews
                             <a href="?page=view_reviews&amp;s=<?php echo $review->reviewer_ip; ?>"><?php echo $review->reviewer_ip; ?></a><br />
                             <div style="margin-left:0px;">
 								<div class="wpcr_rating">
-									<?php echo $this->output_rating($rating->review_rating,false); ?>
+									<?php echo $this->output_rating($review->review_rating,false); ?>
 								</div>
                             </div>
                         </td>
@@ -590,7 +594,7 @@ class WPCustomerReviews
         }
         
         echo '
-        <div id="wpcr_respond" class="wrap">
+        <div id="wpcr_respond_1" class="wrap">
             <h2>WP Customer Reviews - Options</h2>';
             if ($msg) { echo '<h3 style="color:#a00;">'.$msg.'</h3>'; }
             echo '
@@ -1039,10 +1043,6 @@ class WPCustomerReviews
     }
 	
 	function init2() {
-		global $table_prefix;
-        $this->dbtable = $table_prefix.$this->dbtable;
-        $this->wpurl = get_bloginfo('wpurl');
-
         $this->get_options(); // populate the options array
         $this->check_migrate(); // call on every instance to see if we have upgraded in any way
 		
