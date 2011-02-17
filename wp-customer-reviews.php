@@ -33,7 +33,7 @@ class WPCustomerReviews
     var $options = array();
     var $wpurl = '';
     var $got_page_reviews = false;
-    var $shown_it = false;
+    var $shown_aggregate = false;
 
     function WPCustomerReviews() {
 		global $table_prefix;
@@ -642,39 +642,58 @@ class WPCustomerReviews
         return $this->got_page_reviews;
     }
     
-    function aggregate_footer($output_original) {
-        global $post;
+    function aggregate_footer($existing_output) {
         
         $output2 = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>';
-        $output2 .= $this->output_aggregate('');
-        
-        if ($this->options['show_hcard_on'] && !$this->shown_it) {
-            $output2 .= '
-            <div id="wpcr-hcard" class="vcard" style="display:none;">
-                 <a class="url fn org" href="'.$this->options['business_url'].'">'.$this->options['business_name'].'</a>
-                 <a class="email" href="mailto:'.$this->options['business_email'].'">'.$this->options['business_email'].'</a>
-                 <div class="adr">
-                      <div class="street-address">'.$this->options['business_street'].'</div>
-                      <span class="locality">'.$this->options['business_city'].'</span>,
-                      <span class="region">'.$this->options['business_state'].'</span>,
-                      <span class="postal-code">'.$this->options['business_zip'].'</span>
-                      <span class="country-name">'.$this->options['business_country'].'</span>
-                 </div>
-                 <div class="tel">'.$this->options['business_phone'].'</div>
-            </div>
-            ';
-            
-            remove_filter('the_content', 'wpautop'); // keep wp from turning newlines into <p>
+        $output2 .= $this->output_aggregate();
+		
+        if ($this->options['show_hcard_on'] != 0) {
+					
+			// start - make sure we should continue
+			global $post;
+			$show = false;
+			$is_active_page = $this->options['selected_pageid'] == $post->ID;
+			if ($this->options['show_hcard_on'] == 1) { $show = true; }
+			else if ($this->options['show_hcard_on'] == 2 && ( is_home() || is_front_page() ) ) { $show = true; }
+			else if ($this->options['show_hcard_on'] == 3 && $is_active_page ) { $show = true; }
+			// end - make sure we should continue
+			
+			if ($show) {
+				$output2 .= '
+				<div id="wpcr-hcard" class="vcard" style="display:none;">
+					 <a class="url fn org" href="'.$this->options['business_url'].'">'.$this->options['business_name'].'</a>
+					 <a class="email" href="mailto:'.$this->options['business_email'].'">'.$this->options['business_email'].'</a>
+					 <div class="adr">
+						  <div class="street-address">'.$this->options['business_street'].'</div>
+						  <span class="locality">'.$this->options['business_city'].'</span>,
+						  <span class="region">'.$this->options['business_state'].'</span>,
+						  <span class="postal-code">'.$this->options['business_zip'].'</span>
+						  <span class="country-name">'.$this->options['business_country'].'</span>
+					 </div>
+					 <div class="tel">'.$this->options['business_phone'].'</div>
+				</div>
+				';
+			}
+			
+			$output2 = str_replace(array("\r","\n","\t","\r\n","  "),'',$output2); /* minify */
         }
         
-        $this->shown_it = true;
-        
-        return $output_original.$output2; // return combined content
+        return $existing_output.$output2; // return combined content
     }
     
-    function output_aggregate($reviews_contents) {        
-        if ($this->options['show_aggregate_on'] == 2 || $this->shown_it) { return ''; }
-        
+    function output_aggregate() {
+		global $post;
+		
+		// start - make sure we should continue
+		global $post;
+		$is_active_page = $this->options['selected_pageid'] == $post->ID;		
+		if ($this->options['show_aggregate_on'] == 2 && !$is_active_page) { return ''; } // return nothing if not on review page
+		if ($this->options['show_aggregate_on'] == 1 ) { // homepage and chosen review page
+			if ( !is_home() && !is_front_page() && !$is_active_page ) { return ''; } // not on homepage, not on review page
+		}
+		if ($this->shown_aggregate) { return ''; } // dont show if already shown once
+        // end - make sure we should continue
+		
         $reviews = $this->get_active_reviews();
         
         $summary = '';
@@ -716,9 +735,7 @@ class WPCustomerReviews
         </div>
         ';
         
-        $content .= $reviews_contents;
-        
-        $this->shown_it = true;
+        $this->shown_aggregate = true;
         
         return $content;
     }
@@ -755,10 +772,8 @@ class WPCustomerReviews
         
         $reviews_content = '';
         
-        $scores = array();
         if (count($reviews) == 0) {
             $the_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>';
-            $scores[] = 0;
         } else {            
             foreach ($reviews as $review)
             {			
@@ -796,17 +811,14 @@ class WPCustomerReviews
                    </div>
                 </div>
                 <hr />';
-                
-                $scores[] = $review->review_rating;
             }
         }
         
-        $the_content .= $this->output_aggregate($reviews_content);   
+        $the_content .= $this->output_aggregate();  
+		$the_content .= $reviews_content; 		
         $the_content .= $this->show_reviews_form();
         $the_content .= '<p style="padding-top:30px !important;font-size:10px;">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></p>';
         $the_content .= '</div>';
-             
-        //$the_content = str_replace(array("\r","\n","\t","\r\n","  "),'',$the_content); /* minify */
         
         return $the_content_original.$the_content; // return combined content
     }
