@@ -1,0 +1,65 @@
+.wpcr_show { display:inline; }
+.wpcr_hide { display:none; }
+
+#wpcr_commentform label { display:inline !important; }
+#wpcr_commentform #confirm1, #wpcr_commentform #confirm3 { display:none; }
+#wpcr_ad { background:#ffffff; }
+#wpcr_ad label { font-weight:bold; }
+#wpcr_submit_btn,#wpcr_commentform #confirm2 { width:auto !important; }
+
+#wpcr_respond_1, #wpcr_respond_2 { margin:0 !important;; padding:0 !important;; }
+#wpcr_respond_1 .awpcrform, #wpcr_respond_2 .awpcrform { display:block;height:1px;width:1px; }
+#wpcr_respond_1 p, #wpcr_respond_2 p { 
+	margin:0 !important;
+	padding:0 !important;
+	line-height:120% !important;
+	margin-top:2px !important;
+	margin-bottom:2px !important;
+}			
+
+#wpcr_respond_1 .wpcr_rating, #wpcr_commentform .wpcr_rating {
+	border:0 !important;
+	margin:0 !important;
+	padding:0 !important;
+    margin-left:4px !important;
+	margin-top:0px !important;
+	float:left;
+	display:inline;
+	overflow:hidden;
+	height:16px;
+}
+
+#wpcr_commentform .wpcr_rating {
+	margin-top:7px !important;
+}
+
+/* Thank you ColorRating for the inspiration and image */
+#wpcr_respond_1 .sp_rating { line-height:1.7em; display:block; }
+#wpcr_respond_1 .sp_rating * { border:0 none; margin:0; padding:0; }
+
+#wpcr_respond_1  .base  { background:url(newstars.png) 0 0 no-repeat; width:85px; height:17px; float:left; padding-right:4px; overflow:hidden; display:block; }
+#wpcr_respond_1 .average { background:url(newstars.png) 0 -15px no-repeat; text-indent:-9999px; height:17px; }
+
+#wpcr_commentform .sp_rating { line-height:1.7em; display:block; }
+#wpcr_commentform  .sp_rating * { border:0 none; margin:0; padding:0; }
+
+#wpcr_commentform .status { height:16px; width:100px; overflow:hidden; position:relative; cursor:pointer; display:block; }
+
+#wpcr_commentform  .base  { display:none; }
+
+#wpcr_commentform .score { background:url(newstars.png) 0 0 no-repeat; width:85px; height:17px; float:left; position:relative; }
+#wpcr_commentform .score a {
+	display:block;
+	height:17px;
+	float:left;
+	text-indent:-9999px;
+	position:absolute;
+	overflow:hidden;
+	line-height:1em;
+}
+#wpcr_commentform .score a:hover { background:url(newstars.png) bottom right no-repeat; }
+#wpcr_commentform .score1  {width:20%; z-index:55;}
+#wpcr_commentform .score2  {width:40%; z-index:54;}
+#wpcr_commentform .score3  {width:60%; z-index:53;}
+#wpcr_commentform .score4 {width:80%; z-index:52;}
+#wpcr_commentform .score5  {width:100%; z-index:51;}
