@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.1.4
+ * Version:       1.1.5
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.1.4';
+    var $plugin_version = '1.1.5';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $wpurl = '';
@@ -68,6 +68,7 @@ class WPCustomerReviews
         $default_options = array(
             'act_email' => '',
             'activate' => 0,
+			'ask_fields' => array('femail' => 1, 'fwebsite' => 1, 'ftitle' => 1),
             'business_city' => '',
             'business_country' => 'USA',
             'business_email' => get_bloginfo('admin_email'),
@@ -82,6 +83,7 @@ class WPCustomerReviews
             'leave_text' => 'Submit your review',
             'selected_pageid' => -1,
             'show_aggregate_on' => 1,
+			'show_fields' => array('femail' => 0, 'fwebsite' => 0, 'ftitle' => 1),
             'show_hcard_on' => 1,
             'submit_button_text' => 'Submit your review',
             'support_us' => 1
@@ -345,7 +347,7 @@ class WPCustomerReviews
                             <a href="<?php echo $review->reviewer_url; ?>"><?php echo $review->reviewer_url; ?></a><br />
                             <a href="mailto:<?php echo $review->reviewer_email; ?>"><?php echo $review->reviewer_email; ?></a><br />
                             <a href="?page=view_reviews&amp;s=<?php echo $review->reviewer_ip; ?>"><?php echo $review->reviewer_ip; ?></a><br />
-                            <div style="margin-left:0px;">
+                            <div style="margin-left:-4px;">
 								<div class="wpcr_rating">
 									<?php echo $this->output_rating($review->review_rating,false); ?>
 								</div>
@@ -416,11 +418,20 @@ class WPCustomerReviews
             $msg = 'Thank you. Please configure the plugin below.';
         }
         else
-        {
+        {	
+			// reset these to 0 so we can grab the settings below
+			$updated_options['ask_fields']['femail'] = 0;
+			$updated_options['ask_fields']['fwebsite'] = 0;
+			$updated_options['ask_fields']['ftitle'] = 0;
+			$updated_options['show_fields']['femail'] = 0;
+			$updated_options['show_fields']['fwebsite'] = 0;
+			$updated_options['show_fields']['ftitle'] = 0;
+		
             // quick update of all options needed
-            foreach ($_REQUEST as $col => $val) {
-                if (isset($this->options[$col])) {
-                    $updated_options[$col] = trim($val);
+            foreach ($_POST as $col => $val) {
+                if (isset($this->options[$col])) {				
+					if (is_array($val)) { foreach ($val as $v) { $updated_options[$col]["$v"] = 1; } } // checkbox array
+					else { $updated_options[$col] = trim($val); }
                 }
             }
             
@@ -494,8 +505,24 @@ class WPCustomerReviews
 
         $su_checked = '';
         if ($this->options['support_us']) {
-            $su_checked = ' checked';
+            $su_checked = 'checked';
         }
+		
+		$af = array();
+		$af['femail'] = '';
+		$af['fwebsite'] = '';
+		$af['ftitle'] = '';
+		if ($this->options['ask_fields']['femail'] == 1) { $af['femail'] = 'checked'; }
+		if ($this->options['ask_fields']['fwebsite'] == 1) { $af['fwebsite'] = 'checked'; }
+		if ($this->options['ask_fields']['ftitle'] == 1) { $af['ftitle'] = 'checked'; }
+		
+		$sf = array();
+		$sf['femail'] = '';
+		$sf['fwebsite'] = '';
+		$sf['ftitle'] = '';
+		if ($this->options['show_fields']['femail'] == 1) { $sf['femail'] = 'checked'; }
+		if ($this->options['show_fields']['fwebsite'] == 1) { $sf['fwebsite'] = 'checked'; }
+		if ($this->options['show_fields']['ftitle'] == 1) { $sf['ftitle'] = 'checked'; }
 
         echo '
         <div class="postbox" style="width:600px;">
@@ -535,6 +562,7 @@ class WPCustomerReviews
 						&nbsp;
 						<label for="business_phone">Phone # (555-555-5555): </label><input style="width:120px;" type="text" id="business_phone" name="business_phone" value="'.$this->options['business_phone'].'" />
 						<br />
+						<div class="submit" style="padding:10px 0px 0px 0px;"><input type="submit" class="button-primary" value="Save Changes" name="Submit"></div>
 					</div>
 					<div style="background:#eaf2fa;padding:6px;border-top:1px solid #ccc;border-bottom:1px solid #ccc;">
 						<legend>Review Page Settings</legend>
@@ -554,6 +582,16 @@ class WPCustomerReviews
 						</select><br />
 						<small>This enables the aggregate (rollup) format of all combined reviews. It is recommended to use this on both the Homepage and your review page.</small>
 						<br /><br />
+						<label>Fields to ask for on review form: </label><br />
+						<input id="ask_femail" name="ask_fields[]" type="checkbox" '.$af['femail'].' value="femail" />&nbsp;<label for="ask_femail"><small>Email</small></label>&nbsp;&nbsp;&nbsp;
+						<input id="ask_fwebsite" name="ask_fields[]" type="checkbox" '.$af['fwebsite'].' value="fwebsite" />&nbsp;<label for="ask_fwebsite"><small>Website</small></label>&nbsp;&nbsp;&nbsp;
+						<input id="ask_ftitle" name="ask_fields[]" type="checkbox" '.$af['ftitle'].' value="ftitle" />&nbsp;<label for="ask_ftitle"><small>Review Title</small></label>
+						<br /><br />
+						<label>Fields to show on each approved review: </label><br />
+						<input id="show_femail" name="show_fields[]" type="checkbox" '.$sf['femail'].' value="femail" />&nbsp;<label for="show_femail"><small>Email</small></label>&nbsp;&nbsp;&nbsp;
+						<input id="show_fwebsite" name="show_fields[]" type="checkbox" '.$sf['fwebsite'].' value="fwebsite" />&nbsp;<label for="show_fwebsite"><small>Website</small></label>&nbsp;&nbsp;&nbsp;
+						<input id="show_ftitle" name="show_fields[]" type="checkbox" '.$sf['ftitle'].' value="ftitle" />&nbsp;<label for="show_ftitle"><small>Review Title</small></label>
+						<br /><br />
 						<label for="leave_text">Text to be displayed above review form: </label><input style="width:250px;" type="text" id="leave_text" name="leave_text" value="'.$this->options['leave_text'].'" />
 						<br />
 						<small>This will be shown as a heading immediately above the review form.</small>
@@ -564,9 +602,9 @@ class WPCustomerReviews
 						<br /><br />
 						<label for="submit_button_text">Text to use for review form submit button: </label><input style="width:150px;" type="text" id="submit_button_text" name="submit_button_text" value="'.$this->options['submit_button_text'].'" />
 						<br /><br />
-						<input id="support_wpcr" name="support_wpcr" type="checkbox"'.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
+						<input id="support_wpcr" name="support_wpcr" type="checkbox" '.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
 						<br />
-						<div class="submit"><input type="submit" class="button-primary" value="Save Changes" name="Submit"></div>
+						<div class="submit" style="padding:10px 0px 0px 0px;"><input type="submit" class="button-primary" value="Save Changes" name="Submit"></div>
 					</div>
                 </form>
                 <br />
@@ -781,15 +819,15 @@ class WPCustomerReviews
                 <div id="review_'.$review->id.'">
                     <div class="hreview" id="hreview-'.$review->id.'">
                         <h2 class="summary">'.$review->review_title.'</h2>
-                        <div style="float:left;padding-right:10px;">
+                        <div class="wpcr_fl wpcr_sc">
 							<div class="wpcr_rating">
 								'.$this->output_rating($review->review_rating,false).'
 							</div>					
                         </div>
-                        <div style="float:left;">
+                        <div class="wpcr_fl wpcr_rtitle">
                             <abbr title="'.$this->iso8601(strtotime($review->date_time)).'" class="dtreviewed">'.date("M d, Y",strtotime($review->date_time)).'</abbr> by <span class="reviewer vcard" id="hreview-wpcr-reviewer-'.$review->id.'"><span class="fn">'.$review->reviewer_name.'</span></span>
                         </div>
-                        <div style="clear:both;"></div>
+                        <div class="wpcr_clear wpcr_spacing1"></div>
                         <span style="display:none;" class="type">business</span>
                         <div class="item vcard" id="hreview-wpcr-hcard-for-'.$review->id.'" style="display:none;">
                             <a class="url fn org" href="'.$this->options['business_url'].'">'.$this->options['business_name'].'</a>

@@ -1,5 +1,10 @@
 .wpcr_show { display:inline; }
 .wpcr_hide { display:none; }
+.wpcr_fl { float:left; }
+.wpcr_sc { padding:0px 10px 0px 0px; }
+.wpcr_rtitle { padding:0px 0px 0px 0px; line-height:20px; }
+.wpcr_clear { clear:both; }
+.wpcr_spacing1 { padding-bottom:5px; }
 
 #wpcr_commentform label { display:inline !important; }
 #wpcr_commentform #confirm1, #wpcr_commentform #confirm3 { display:none; }
@@ -7,7 +12,8 @@
 #wpcr_ad label { font-weight:bold; }
 #wpcr_submit_btn,#wpcr_commentform #confirm2 { width:auto !important; }
 
-#wpcr_respond_1, #wpcr_respond_2 { margin:0 !important;; padding:0 !important;; }
+#wpcr_respond_1 h2.summary { font-size:1.1em; padding: 5px 0 5px 0; }
+#wpcr_respond_1, #wpcr_respond_2 { margin:0 !important; padding:0 !important; }
 #wpcr_respond_1 .awpcrform, #wpcr_respond_2 .awpcrform { display:block;height:1px;width:1px; }
 #wpcr_respond_1 p, #wpcr_respond_2 p { 
 	margin:0 !important;
