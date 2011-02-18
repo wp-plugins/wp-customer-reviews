@@ -41,10 +41,14 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 = 1.1.5 (***) =
 * Some minor CSS fixes, cleanups, and added some spacing to fields
-* *** Adding options for which fields to ask for (and show) on the reviews page
+* *** Added options for which fields to ask for (and show) on the reviews page
 * *** Review form is now layed out in tables to make it more appealing
 * *** Review form is now hidden on default, and opens with a styled button with animation when a user clicks to submit a review
 * *** You may now edit reviews in the admin panel
+* *** Added option for choosing to use an h2, h3, or h4 for review titles
+* *** Added pagination to review page with option of # per page
+* *** Fixing formatting of reviews on review page
+* *** Logged in users do not need to fill out some form fields
 
 = 1.1.4 (02-17-2011) =
 * Plugin now actually obeys the options for where to output the hCard and Aggregate Reviews
