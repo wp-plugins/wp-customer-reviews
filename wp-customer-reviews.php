@@ -809,16 +809,33 @@ class WPCustomerReviews
         $reviews = $this->get_active_reviews();
         
         $reviews_content = '';
+		$ftitle = '';
+		$hidesummary = '';
         
         if (count($reviews) == 0) {
             $the_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>';
         } else {            
             foreach ($reviews as $review)
-            {			
+            {
+				if ($this->options['show_fields']['fwebsite'] == 1) { 
+					$review->review_text .= '<br />'.$fwebsite;
+				}
+				if ($this->options['show_fields']['femail'] == 1) { 
+					$review->review_text .= '<br />'.$femail;
+				}
+				if ($this->options['show_fields']['ftitle'] == 1) { 
+					// do nothing
+				} else {
+					$review->review_title = substr($review->review_text,0,150);
+					$hidesummary = 'wpcr_hide';
+				}
+				
+				$review->review_text = nl2br($review->review_text);
+			
                 $reviews_content .= '
                 <div id="review_'.$review->id.'">
                     <div class="hreview" id="hreview-'.$review->id.'">
-                        <h2 class="summary">'.$review->review_title.'</h2>
+                        <h2 class="summary '.$hidesummary.'">'.$review->review_title.'</h2>
                         <div class="wpcr_fl wpcr_sc">
 							<div class="wpcr_rating">
 								'.$this->output_rating($review->review_rating,false).'
@@ -843,6 +860,7 @@ class WPCustomerReviews
                             <p>
                                 <abbr class="rating" title="'.$review->review_rating.'"></abbr>
                                 '.$review->review_text.'
+								
                             </p>
                         </blockquote>
                         <span style="display:none;" class="version">0.3</span>
@@ -961,16 +979,25 @@ class WPCustomerReviews
 				</script>
 		';
 		
+		$fields = '';
+		if ($this->options['ask_fields']['femail'] == 1) { 
+			$fields .= '<p><label for="femail" class="comment-field"><small>Email:</small> <input class="text-input" type="text" id="femail" name="femail" value="'.$_POST['email'].'" /></label></p>';
+		}
+		if ($this->options['ask_fields']['fwebsite'] == 1) { 
+			$fields .= '<p><label for="fwebsite" class="comment-field"><small>Website:</small> <input class="text-input" type="text" id="fwebsite" name="fwebaddy" value="'.$_POST['webaddy'].'" /></label></p>';
+		}
+		if ($this->options['ask_fields']['ftitle'] == 1) { 
+			$fields .= '<p><label for="ftitle" class="comment-field"><small>Review Title:</small> <input class="text-input" type="text" id="ftitle" name="ftitle" maxlength="150" value="'.$_POST['title'].'" /></label></p>';
+		}
+		
         return '
             <div id="wpcr_respond_2">
                 <a id=\'wpcrform\' class=\'awpcrform\'></a>
                 <h4 id=\'wpcr_postcomment\'>'.$this->options['leave_text'].'</h4>
                 <form onsubmit=\'return valwpcrform(this);\' class=\'wpcrcform\' id=\'wpcr_commentform\' method="post" action="'.trailingslashit($this->wpurl).'nospam/">
                     <p><label for="wpcr_fname" class="comment-field"><small>Name:</small> <input class="text-input" type="text" id="wpcr_fname" name="fname" value="'.$_POST['name'].'" /></label></p>
-                    <p><label for="femail" class="comment-field"><small>Email:</small> <input class="text-input" type="text" id="femail" name="femail" value="'.$_POST['email'].'" /></label></p>
-                    <p><label for="fwebsite" class="comment-field"><small>Website:</small> <input class="text-input" type="text" id="fwebsite" name="fwebaddy" value="'.$_POST['webaddy'].'" /></label></p>
-                    <p><label for="ftitle" class="comment-field"><small>Review Title:</small> <input class="text-input" type="text" id="ftitle" name="ftitle" value="'.$_POST['title'].'" /></label></p>
-                    <div><div style="float:left;line-height:30px;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;
+                    '.$fields.'
+					<div><div style="float:left;line-height:30px;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;
                     <div class="wpcr_rating">
 						'.$this->output_rating(0,true).'
                     </div>
