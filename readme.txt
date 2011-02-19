@@ -16,6 +16,11 @@ There are many sites that are crawling for user-generated reviews now, including
 * Reviews are displayed to visitors in a friendly format, but search engines see the hReview microformat (and RDFa soon!)
 * Multiple anti-spam measures to prevent automated spambots from submitting reviews.
 * Provides a configurable `Business hCard`, to help identify all pages of your site as belonging to your business.
+* Completely customizable, including which fields to ask for and show.
+* Works with caching plugins and all themes.
+* Includes an external stylesheet so you can modify it to better fit your theme.
+* Reviews can be edited for content and date.
+* And much more...
 
 More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plugins/wp-customer-reviews/)
 
@@ -41,14 +46,14 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 = 1.1.5 (***) =
 * Some minor CSS fixes, cleanups, and added some spacing to fields
-* *** Added options for which fields to ask for (and show) on the reviews page
-* *** Review form is now layed out in tables to make it more appealing
-* *** Review form is now hidden on default, and opens with a styled button with animation when a user clicks to submit a review
-* *** You may now edit reviews in the admin panel
-* *** Added option for choosing to use an h2, h3, or h4 for review titles
-* *** Added pagination to review page with option of # per page
-* *** Fixing formatting of reviews on review page
-* *** Logged in users do not need to fill out some form fields
+* Added options for which fields to ask for (and show) on the reviews page
+* Review form is now layed out in tables to make it more appealing
+* Fixing line break formatting of reviews on review page
+* Review form is now hidden on default, and opens with a styled button with animation when a user clicks to submit a review
+* Added option for choosing to use an h2, h3, or h4 for review titles
+* Added pagination to review page with option of # per page
+* [todo] You may now edit reviews in the admin panel
+* [todo] Logged in users do not need to fill out some form fields
 
 = 1.1.4 (02-17-2011) =
 * Plugin now actually obeys the options for where to output the hCard and Aggregate Reviews

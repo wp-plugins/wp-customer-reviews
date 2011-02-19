@@ -39,6 +39,7 @@ class WPCustomerReviews
 		global $table_prefix;
         $this->dbtable = $table_prefix.$this->dbtable;
         $this->wpurl = get_bloginfo('wpurl');
+		$this->page = intval($_GET['wpcrp']);
 		
         add_filter('the_content', array(&$this, 'show_reviews'), 1);
         add_filter('the_content', array(&$this, 'aggregate_footer'), 1);
@@ -81,12 +82,14 @@ class WPCustomerReviews
             'dbversion' => '0',
             'goto_leave_text' => 'Click here to submit your review.',
             'leave_text' => 'Submit your review',
+			'reviews_per_page' => 10,
             'selected_pageid' => -1,
             'show_aggregate_on' => 1,
 			'show_fields' => array('femail' => 0, 'fwebsite' => 0, 'ftitle' => 1),
             'show_hcard_on' => 1,
             'submit_button_text' => 'Submit your review',
-            'support_us' => 1
+            'support_us' => 1,
+			'title_tag' => 'h2'
         );
         $this->options = get_option('wpcr_options',$default_options);
         
@@ -465,6 +468,7 @@ class WPCustomerReviews
         }
 
         update_option('wpcr_options', $updated_options);
+		$this->force_update_cache(); // update any caches
 
         return $msg;
     }
@@ -582,25 +586,36 @@ class WPCustomerReviews
 						</select><br />
 						<small>This enables the aggregate (rollup) format of all combined reviews. It is recommended to use this on both the Homepage and your review page.</small>
 						<br /><br />
-						<label>Fields to ask for on review form: </label><br />
+						<label>Fields to ask for on review form: </label>
 						<input id="ask_femail" name="ask_fields[]" type="checkbox" '.$af['femail'].' value="femail" />&nbsp;<label for="ask_femail"><small>Email</small></label>&nbsp;&nbsp;&nbsp;
 						<input id="ask_fwebsite" name="ask_fields[]" type="checkbox" '.$af['fwebsite'].' value="fwebsite" />&nbsp;<label for="ask_fwebsite"><small>Website</small></label>&nbsp;&nbsp;&nbsp;
 						<input id="ask_ftitle" name="ask_fields[]" type="checkbox" '.$af['ftitle'].' value="ftitle" />&nbsp;<label for="ask_ftitle"><small>Review Title</small></label>
 						<br /><br />
-						<label>Fields to show on each approved review: </label><br />
+						<label>Fields to show on each approved review: </label>
 						<input id="show_femail" name="show_fields[]" type="checkbox" '.$sf['femail'].' value="femail" />&nbsp;<label for="show_femail"><small>Email</small></label>&nbsp;&nbsp;&nbsp;
 						<input id="show_fwebsite" name="show_fields[]" type="checkbox" '.$sf['fwebsite'].' value="fwebsite" />&nbsp;<label for="show_fwebsite"><small>Website</small></label>&nbsp;&nbsp;&nbsp;
 						<input id="show_ftitle" name="show_fields[]" type="checkbox" '.$sf['ftitle'].' value="ftitle" />&nbsp;<label for="show_ftitle"><small>Review Title</small></label>
+						<br />
+						<small>It is usually NOT a good idea to show email addresses publicly.</small>
+						<br /><br />
+						<label for="title_tag">Heading to use for Review Titles: </label>
+						<select id="title_tag" name="title_tag">
+							<option ';if ($this->options['title_tag'] == 'h2') { echo "selected"; } echo ' value="h2">H2</option>
+							<option ';if ($this->options['title_tag'] == 'h3') { echo "selected"; } echo ' value="h3">H3</option>
+							<option ';if ($this->options['title_tag'] == 'h4') { echo "selected"; } echo ' value="h4">H4</option>
+							<option ';if ($this->options['title_tag'] == 'h5') { echo "selected"; } echo ' value="h5">H6</option>
+							<option ';if ($this->options['title_tag'] == 'h6') { echo "selected"; } echo ' value="h6">H7</option>
+						</select>
+						<br /><br />
+						<label for="goto_leave_text">Button text used to show review form: </label><input style="width:250px;" type="text" id="goto_leave_text" name="goto_leave_text" value="'.$this->options['goto_leave_text'].'" />
+						<br />
+						<small>This button will be shown above the first review.</small>
 						<br /><br />
 						<label for="leave_text">Text to be displayed above review form: </label><input style="width:250px;" type="text" id="leave_text" name="leave_text" value="'.$this->options['leave_text'].'" />
 						<br />
 						<small>This will be shown as a heading immediately above the review form.</small>
 						<br /><br />
-						<label for="goto_leave_text">Text to use to link to review form: </label><input style="width:250px;" type="text" id="goto_leave_text" name="goto_leave_text" value="'.$this->options['goto_leave_text'].'" />
-						<br />
-						<small>This link will be shown above the first review.</small>
-						<br /><br />
-						<label for="submit_button_text">Text to use for review form submit button: </label><input style="width:150px;" type="text" id="submit_button_text" name="submit_button_text" value="'.$this->options['submit_button_text'].'" />
+						<label for="submit_button_text">Text to use for review form submit button: </label><input style="width:200px;" type="text" id="submit_button_text" name="submit_button_text" value="'.$this->options['submit_button_text'].'" />
 						<br /><br />
 						<input id="support_wpcr" name="support_wpcr" type="checkbox" '.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
 						<br />
@@ -660,10 +675,14 @@ class WPCustomerReviews
         echo '<br /></div>';
     }
     
-    function get_active_reviews() {
-        if ($this->got_page_reviews != false) { return $this->got_page_reviews; }
+    function get_active_reviews($startpage,$perpage,$homepage) {
+        if ($this->got_page_reviews !== false) { return $this->got_page_reviews; }
         
         global $wpdb;
+		
+		if ($homepage === true) { $limit = ''; }
+		else { $limit = 'LIMIT '.$startpage*$perpage.','.$perpage; }
+		
         $reviews = $wpdb->get_results( "SELECT 
             id,
             date_time,
@@ -673,10 +692,13 @@ class WPCustomerReviews
             review_text,
             review_rating,
             reviewer_url
-            FROM `$this->dbtable` WHERE status=1 ORDER BY id DESC
+            FROM `$this->dbtable` WHERE status=1 ORDER BY id DESC $limit
             " );
-
-        $this->got_page_reviews = $reviews;
+			
+		$total_reviews = $wpdb->get_results( "SELECT COUNT(*) AS total FROM `$this->dbtable` WHERE status=1" );
+		$total_reviews = $total_reviews[0]->total;
+		
+        $this->got_page_reviews = array($reviews,$total_reviews);
         return $this->got_page_reviews;
     }
     
@@ -732,7 +754,9 @@ class WPCustomerReviews
 		if ($this->shown_aggregate) { return ''; } // dont show if already shown once
         // end - make sure we should continue
 		
-        $reviews = $this->get_active_reviews();
+		if ( is_home() || is_front_page() ) { $homepage = 1; } else { $homepage = 0; }
+		
+        $reviews = $this->get_active_reviews($this->page,$this->options['reviews_per_page'],$homepage);
         
         $summary = '';
         $scores = array();
@@ -783,6 +807,44 @@ class WPCustomerReviews
         $date = date('Y-m-d\TH:i:sO', $time);
         return (substr($date, 0, strlen($date)-2).':'.substr($date, -2));
     }
+	
+	function pagination($total_results = 0, $range = 2) {
+		 
+		 $out = '';
+		 
+		 $showitems = ($range * 2) + 1;  
+
+		 $paged = $this->page;
+		 if($paged == 0) { $paged = 1; }
+		 
+		 $pages = $total_results / $this->options['reviews_per_page'];
+
+		 if($pages > 1)
+		 {
+			 $out .= "<div id='wpcr_pagination'>";
+			 
+			 if($paged > 2 && $paged > $range+1 && $showitems < $pages) { $out .= "<a href='?wpcrp=1'>&laquo;</a>"; }
+			 if($paged > 1 && $showitems < $pages) { $out .= "<a href='?wpcrp=".($paged - 1)."'>&lsaquo;</a>"; }
+
+			 for ($i=1; $i <= $pages; $i++)
+			 {
+				if ($i == $paged)
+				{
+					$out .= "<span class='wpcr_current'>$paged</span>";
+				}
+				else if ( !($i >= $paged + $range + 1 || $i <= $paged - $range - 1) || $pages <= $showitems )
+				{
+					$out .= "<a href='?wpcrp=$i' class='wpcr_inactive' >".$i."</a>";
+				}
+			 }
+
+			 if ($paged < $pages && $showitems < $pages) { $out .= "<a href='?wpcrp=".($paged + 1)."'>&rsaquo;</a>"; }
+			 if ($paged < $pages-1 &&  $paged+$range-1 < $pages && $showitems < $pages) { $out .= "<a href='?wpcrp=$pages'>&raquo;</a>"; }
+			 $out .= "</div>\n";
+			 
+			 return $out;
+		 }
+	}
 
     function show_reviews($the_content_original) {
         global $post;
@@ -804,24 +866,32 @@ class WPCustomerReviews
         
         $the_content .= '<div id="wpcr_respond_1">';
         
-        $the_content .= '<p><a href="#wpcrform">'.$this->options['goto_leave_text'].'</a></p><hr />';
+        $the_content .= '<p><a id="wpcr_button_1" href="javascript:void(0);">'.$this->options['goto_leave_text'].'</a></p><hr />';
         
-        $reviews = $this->get_active_reviews();
-        
+		$this->options['reviews_per_page'] = 1; // debug
+		
+        $arr_Reviews = $this->get_active_reviews($this->page,$this->options['reviews_per_page'],false);
+        		
+		$reviews = $arr_Reviews[0];
+		$total_reviews = intval($arr_Reviews[1]);
+		
         $reviews_content = '';
 		$ftitle = '';
 		$hidesummary = '';
-        
+		$title_tag = $this->options['title_tag'];
+		
         if (count($reviews) == 0) {
             $the_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>';
         } else {            
             foreach ($reviews as $review)
             {
-				if ($this->options['show_fields']['fwebsite'] == 1) { 
-					$review->review_text .= '<br />'.$fwebsite;
+				$review->review_text .= '<br />';
+			
+				if ($this->options['show_fields']['fwebsite'] == 1 && $review->reviewer_url != '') { 
+					$review->review_text .= '<br /><small><a href="'.$review->reviewer_url.'">'.$review->reviewer_url.'</a></small>';
 				}
-				if ($this->options['show_fields']['femail'] == 1) { 
-					$review->review_text .= '<br />'.$femail;
+				if ($this->options['show_fields']['femail'] == 1 && $review->reviewer_email != '') { 
+					$review->review_text .= '<br /><small>'.$review->reviewer_email.'</small>';
 				}
 				if ($this->options['show_fields']['ftitle'] == 1) { 
 					// do nothing
@@ -835,13 +905,13 @@ class WPCustomerReviews
                 $reviews_content .= '
                 <div id="review_'.$review->id.'">
                     <div class="hreview" id="hreview-'.$review->id.'">
-                        <h2 class="summary '.$hidesummary.'">'.$review->review_title.'</h2>
+                        <'.$title_tag.' class=\'summary '.$hidesummary.'\'>'.$review->review_title.'</'.$title_tag.'>
                         <div class="wpcr_fl wpcr_sc">
 							<div class="wpcr_rating">
 								'.$this->output_rating($review->review_rating,false).'
 							</div>					
                         </div>
-                        <div class="wpcr_fl wpcr_rtitle">
+                        <div class="wpcr_fl wpcr_rname">
                             <abbr title="'.$this->iso8601(strtotime($review->date_time)).'" class="dtreviewed">'.date("M d, Y",strtotime($review->date_time)).'</abbr> by <span class="reviewer vcard" id="hreview-wpcr-reviewer-'.$review->id.'"><span class="fn">'.$review->reviewer_name.'</span></span>
                         </div>
                         <div class="wpcr_clear wpcr_spacing1"></div>
@@ -870,10 +940,11 @@ class WPCustomerReviews
             }
         }
         
-        $the_content .= $this->output_aggregate();  
-		$the_content .= $reviews_content; 		
-        $the_content .= $this->show_reviews_form();
-        $the_content .= '<p style="padding-top:30px !important;font-size:10px;">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></p>';
+        $the_content .= $this->output_aggregate();
+		$the_content .= $this->show_reviews_form();
+		$the_content .= $reviews_content;
+		$the_content .= $this->pagination($total_reviews);
+        $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
         $the_content .= '</div>';
         
         return $the_content_original.$the_content; // return combined content
@@ -915,22 +986,30 @@ class WPCustomerReviews
                         var frating = parseInt(jQuery("#frating").val());
                         if (!frating) { frating = 0; }
 
+						var err = new Array();
+						
                         if (jQuery("#wpcr_fname").val() == "") {
-                            alert("You must include your name.");
-                            return false;
+                            err.push("You must include your name.");
+                        }
+						if (jQuery("#wpcr_ftext").val().length < 30) {
+                            err.push("You must include a review. Please make reviews at least a couple of sentences.");
+                        }
+						if (frating < 1 || frating > 5) {
+                            err.push("Please select a star rating from 1 to 5.");
                         }
                         if (jQuery("#confirm2").is(":checked") == false) {
-                            alert("You must confirm that you are human.");
-                            return false;
+                            err.push("You must confirm that you are human.");
                         }
                         if (jQuery("#confirm1").is(":checked") || jQuery("#confirm3").is(":checked")) {
-                            alert("You must confirm that you are human. Code 2.");
-                            return false;
-                        }						
-                        if (frating < 1 || frating > 5) {
-                            alert("Please select a star rating from 1 to 5.");
-                            return false;
+                            err.push("You must confirm that you are human. Code 2.");
                         }
+
+						if (err.length) {
+							var err2 = err.join("\\\n");
+							alert(err2);
+							jQuery("#wpcr_table_2").find("input").first().focus();
+							return false;
+						}
 						
                         jQuery(me).attr("action","");
                         return true;
@@ -950,9 +1029,16 @@ class WPCustomerReviews
 						
 						wpcr_mout_cnt++;	
 					}
+					
+					function wpcr_showform() {
+						jQuery("#wpcr_respond_2").slideToggle();
+						jQuery("#wpcr_table_2").find("input").first().focus();
+					}
 						
 					var wpcr_mout_cnt = 0;
-					jQuery(document).ready(function(){						
+					jQuery(document).ready(function(){
+						jQuery("#wpcr_button_1").click(wpcr_showform);
+					
 						jQuery("#wpcr_commentform .wpcr_rating a").click(function() {
 							var wpcr_rating = jQuery(this).html();
 							var new_w = 20 * wpcr_rating + "%";
@@ -975,19 +1061,19 @@ class WPCustomerReviews
 		$script = '<script type="text/javascript">
 				<!--
 				'.$script.'
-				//--->
+				//-->
 				</script>
 		';
 		
 		$fields = '';
 		if ($this->options['ask_fields']['femail'] == 1) { 
-			$fields .= '<p><label for="femail" class="comment-field"><small>Email:</small> <input class="text-input" type="text" id="femail" name="femail" value="'.$_POST['email'].'" /></label></p>';
+			$fields .= '<tr><td><label for="femail" class="comment-field">Email:</label></td><td><input class="text-input" type="text" id="femail" name="femail" /></td></tr>';
 		}
 		if ($this->options['ask_fields']['fwebsite'] == 1) { 
-			$fields .= '<p><label for="fwebsite" class="comment-field"><small>Website:</small> <input class="text-input" type="text" id="fwebsite" name="fwebaddy" value="'.$_POST['webaddy'].'" /></label></p>';
+			$fields .= '<tr><td><label for="fwebsite" class="comment-field">Website:</label></td><td><input class="text-input" type="text" id="fwebsite" name="fwebaddy" /></td></tr>';
 		}
 		if ($this->options['ask_fields']['ftitle'] == 1) { 
-			$fields .= '<p><label for="ftitle" class="comment-field"><small>Review Title:</small> <input class="text-input" type="text" id="ftitle" name="ftitle" maxlength="150" value="'.$_POST['title'].'" /></label></p>';
+			$fields .= '<tr><td><label for="ftitle" class="comment-field">Review Title:</label></td><td><input class="text-input" type="text" id="ftitle" name="ftitle" maxlength="150" /></td></tr>';
 		}
 		
         return '
@@ -995,31 +1081,35 @@ class WPCustomerReviews
                 <a id=\'wpcrform\' class=\'awpcrform\'></a>
                 <h4 id=\'wpcr_postcomment\'>'.$this->options['leave_text'].'</h4>
                 <form onsubmit=\'return valwpcrform(this);\' class=\'wpcrcform\' id=\'wpcr_commentform\' method="post" action="'.trailingslashit($this->wpurl).'nospam/">
-                    <p><label for="wpcr_fname" class="comment-field"><small>Name:</small> <input class="text-input" type="text" id="wpcr_fname" name="fname" value="'.$_POST['name'].'" /></label></p>
-                    '.$fields.'
-					<div><div style="float:left;line-height:30px;"><span class="comment-field"><small>Rating:</small></span></div>&nbsp;
-                    <div class="wpcr_rating">
-						'.$this->output_rating(0,true).'
-                    </div>
-                    <div style="clear:both;"></div>
-                    <input type="hidden" id="frating" name="frating" value="'.$_POST['frating'].'" />
-                    </div>
-                    <p><label for="ftext" class="comment-field"><small>Review:</small></label></p>
-                    <div>
-                        <textarea id="ftext" name="ftext" cols="50" rows="10">'.$_POST['text'].'</textarea><br />
-                    </div>
-                    <div style="margin-top:10px;">
-                        <div style="font-size:13px;color:#c00;margin-bottom:4px;">
-                            <input type="checkbox" name="fconfirm1" id="confirm1" value="1" />
-                            <input type="checkbox" name="fconfirm2" id="confirm2" value="1" />&nbsp;<label for="confirm2">Check this box to confirm you are human.</label>
-                            <input type="checkbox" name="fconfirm3" id="confirm3" value="1" />
-                        </div>
-                        <input id="wpcr_submit_btn" name="submitwpcr_'.$post->ID.'" type="submit" value="'.$this->options['submit_button_text'].'" />
-                    </div>
-                    <div style="clear:both;"></div>
+					<div id="wpcr_div_2">
+						<input type="hidden" id="frating" name="frating" />
+						<table id="wpcr_table_2">
+							<tbody>
+								<tr><td><label for="wpcr_fname" class="comment-field">Name:</label></td><td><input class="text-input" type="text" id="wpcr_fname" name="fname" /></td></tr>
+								'.$fields.'
+								<tr>
+									<td><label class="comment-field">Rating:</label></td>
+									<td><div class="wpcr_rating">'.$this->output_rating(0,true).'</div></td>
+								</tr>
+								<tr><td colspan="2"><label for="wpcr_ftext" class="comment-field">Review:</label></td></tr>
+								<tr><td colspan="2"><textarea id="wpcr_ftext" name="ftext" rows="8" cols="50"></textarea></td></tr>
+								<tr>
+									<td colspan="2" id="wpcr_check_confirm">
+										<input type="checkbox" name="fconfirm1" id="confirm1" value="1" />
+										<div class="wpcr_fl"><input type="checkbox" name="fconfirm2" id="confirm2" value="1" /></div><div class="wpcr_fl" style="margin:-2px 0px 0px 5px"><label for="confirm2">Check this box to confirm you are human.</label></div>
+										<div class="wpcr_clear"></div>
+										<input type="checkbox" name="fconfirm3" id="confirm3" value="1" />
+									</td>
+								</tr>
+								<tr><td colspan="2"><input id="wpcr_submit_btn" name="submitwpcr_'.$post->ID.'" type="submit" value="'.$this->options['submit_button_text'].'" /></td></tr>
+							</tbody>
+						</table>
+					</div>
                 </form>
 				'.$script.'
+				<hr />
             </div>
+			<div class="wpcr_clear wpcr_pb5"></div>
         ';
     }
 
@@ -1045,12 +1135,6 @@ class WPCustomerReviews
 		if ($p->frating < 1 || $p->frating > 5) {
 			$errors .= 'You have triggered our anti-spam system. Please try again. Code 003';
 		}
-		
-		if (trim($p->fname) == '') {
-			$errors .= 'Your name is required. Please try again. Code 004';
-		}
-        
-        if ($errors) { return '<div style="color:#c00;font-weight:bold;padding-bottom:15px;">'.$errors.'</div>'; }
         
         // some sanitation
         $date_time = date('Y-m-d H:i:s');
@@ -1059,6 +1143,16 @@ class WPCustomerReviews
         $p->ftitle = strip_tags($p->ftitle);
         $p->ftext = strip_tags($p->ftext);
         $p->frating = intval($p->frating);
+		
+		if (trim($p->fname) == '') {
+			$errors .= 'You must include your name.';
+		}
+		
+		if (strlen(trim($p->ftext)) < 30) {
+			$errors .= 'You must include a review. Please make reviews at least a couple of sentences.';
+		}
+        
+        if ($errors) { return '<div style="color:#c00;font-weight:bold;padding-bottom:15px;">'.$errors.'</div>'; }
         
         $query = $wpdb->prepare("INSERT INTO `$this->dbtable` 
                 (date_time, reviewer_name, reviewer_email, reviewer_ip, review_title, review_text, status, review_rating, reviewer_url) 
