@@ -1,5 +1,31 @@
 jQuery(document).ready(function() {
+    
     jQuery(".best_in_place").best_in_place();
+    
+    jQuery("#require_fname").click(function(){
+        if ( jQuery(this).is(":checked") ) {
+            jQuery("#ask_fname").attr('checked','checked');
+        }
+    });
+    
+    jQuery("#require_femail").click(function(){
+        if ( jQuery(this).is(":checked") ) {
+            jQuery("#ask_femail").attr('checked','checked');
+        }
+    });
+    
+    jQuery("#require_fwebsite").click(function(){
+        if ( jQuery(this).is(":checked") ) {
+            jQuery("#ask_fwebsite").attr('checked','checked');
+        }
+    });
+    
+    jQuery("#require_ftitle").click(function(){
+        if ( jQuery(this).is(":checked") ) {
+            jQuery("#ask_ftitle").attr('checked','checked');
+        }
+    });
+    
 });
 
 /**

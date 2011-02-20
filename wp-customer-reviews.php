@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.1.5
+ * Version:       1.1.6
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.1.5';
+    var $plugin_version = '1.1.6';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $wpurl = '';
@@ -476,6 +476,7 @@ class WPCustomerReviews
                       $review->review_title = stripslashes($review->review_title);
                       $review->review_text = stripslashes($review->review_text);
                       $review->reviewer_name = stripslashes($review->reviewer_name);
+                      if ($review->reviewer_name == '') { $review->reviewer_name = 'Anonymous'; }
                   ?>
                       <tr class="approved" id="review-<?php echo $rid;?>">
                         <th class="check-column" scope="row"><input type="checkbox" value="<?php echo $rid;?>" name="delete_reviews[]" /></th>
@@ -606,7 +607,7 @@ class WPCustomerReviews
             $updated_options['selected_pageid'] = intval($this->p->page_dropdown);
             $updated_options['show_aggregate_on'] = intval($this->p->show_aggregate_on);
             $updated_options['show_hcard_on'] = intval($this->p->show_hcard_on);
-            $updated_options['support_us'] = intval($this->p->support_wpcr);
+            $updated_options['support_us'] = intval($this->p->support_us);
             
             if ($updated_options['reviews_per_page'] < 1) { $updated_options['reviews_per_page'] = 10; }
 			
@@ -805,7 +806,7 @@ class WPCustomerReviews
                         <br /><br />
                         <label for="submit_button_text">Text to use for review form submit button: </label><input style="width:200px;" type="text" id="submit_button_text" name="submit_button_text" value="'.$this->options['submit_button_text'].'" />
                         <br /><br />
-                        <input id="support_wpcr" name="support_wpcr" type="checkbox" '.$su_checked.' value="1" />&nbsp;<label for="support_wpcr"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
+                        <input id="support_us" name="support_us" type="checkbox" '.$su_checked.' value="1" />&nbsp;<label for="support_us"><small>Support our work and keep this plugin free. By checking this box, a small "Powered by WP Customer Reviews" link will be placed at the bottom of your reviews page.</small></label>
                         <br />
                         <div class="submit" style="padding:10px 0px 0px 0px;"><input type="submit" class="button-primary" value="Save Changes" name="Submit"></div>
                     </div>
@@ -1115,6 +1116,13 @@ class WPCustomerReviews
             {
                 $review->review_text .= '<br />';
 
+                $hide_name = '';
+                if ($this->options['show_fields']['fname'] == 0) {
+                    $review->reviewer_name = 'Anonymous';
+                    $hide_name = 'wpcr_hide';
+                }
+                if ($review->reviewer_name == '') { $review->reviewer_name = 'Anonymous'; }
+                
                 if ($this->options['show_fields']['fwebsite'] == 1 && $review->reviewer_url != '') { 
                         $review->review_text .= '<br /><small><a href="'.$review->reviewer_url.'">'.$review->reviewer_url.'</a></small>';
                 }
@@ -1140,7 +1148,7 @@ class WPCustomerReviews
                             </div>					
                         </div>
                         <div class="wpcr_fl wpcr_rname">
-                            <abbr title="'.$this->iso8601(strtotime($review->date_time)).'" class="dtreviewed">'.date("M d, Y",strtotime($review->date_time)).'</abbr> by <span class="reviewer vcard" id="hreview-wpcr-reviewer-'.$review->id.'"><span class="fn">'.$review->reviewer_name.'</span></span>
+                            <abbr title="'.$this->iso8601(strtotime($review->date_time)).'" class="dtreviewed">'.date("M d, Y",strtotime($review->date_time)).'</abbr>&nbsp;<span class="'.$hide_name.'">by</span>&nbsp;<span class="reviewer vcard" id="hreview-wpcr-reviewer-'.$review->id.'"><span class="fn '.$hide_name.'">'.$review->reviewer_name.'</span></span>
                         </div>
                         <div class="wpcr_clear wpcr_spacing1"></div>
                         <span style="display:none;" class="type">business</span>
@@ -1165,7 +1173,9 @@ class WPCustomerReviews
         $the_content .= $this->show_reviews_form($status_msg);
         $the_content .= $reviews_content;
         $the_content .= $this->pagination($total_reviews);
-        $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
+        if ($this->options['support_us'] == 1) {
+            $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
+        }
         $the_content .= '</div>';
         
         return $the_content_original.$the_content; // return combined content
