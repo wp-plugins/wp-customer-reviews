@@ -4,7 +4,7 @@ Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating
 Requires at least: 3.0
 Tested up to: 3.1
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -19,7 +19,7 @@ There are many sites that are crawling for user-generated reviews now, including
 * Completely customizable, including which fields to ask for and show.
 * Works with caching plugins and all themes.
 * Includes an external stylesheet so you can modify it to better fit your theme.
-* Reviews can be edited for content and date.
+* Reviews can be edited by admin for content and date.
 * And much more...
 
 More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plugins/wp-customer-reviews/)
@@ -44,16 +44,20 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
-= 1.1.5 (***) =
+= 1.1.5 (02-20-2011) =
 * Some minor CSS fixes, cleanups, and added some spacing to fields
 * Added options for which fields to ask for (and show) on the reviews page
-* Review form is now layed out in tables to make it more appealing
+* Review form is now displayed using tables to make it more appealing and flexible
 * Fixing line break formatting of reviews on review page
 * Review form is now hidden on default, and opens with a styled button with animation when a user clicks to submit a review
 * Added option for choosing to use an h2, h3, or h4 for review titles
-* Added pagination to review page with option of # per page
-* [todo] You may now edit reviews in the admin panel
-* [todo] Logged in users do not need to fill out some form fields
+* Added pagination to review page with option of # shown per page
+* Javascript is now loaded externally to prevent odd issues and allow for easier customizations
+* You may now edit date, title, name, and text of reviews in the admin area
+* Reviews may now be permanently deleted via the admin area
+* Cleaned up some redirects and methods used
+* Some additional anti-spam measures are now used.. just because we can
+* Refreshing pages will no longer try to repost the review form
 
 = 1.1.4 (02-17-2011) =
 * Plugin now actually obeys the options for where to output the hCard and Aggregate Reviews
@@ -123,5 +127,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 1.1.2 =
-1.1.2 fixes some major bugs and compatibility issues. It is highly recommended to upgrade.
+= 1.1.5 =
+1.1.5 fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
