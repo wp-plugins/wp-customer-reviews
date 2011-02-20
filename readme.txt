@@ -4,7 +4,7 @@ Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating
 Requires at least: 3.0
 Tested up to: 3.1
-Stable tag: 1.1.6
+Stable tag: 1.1.7
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -43,6 +43,12 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
 
 == Changelog ==
+
+= 1.1.7 (02-20-2011) =
+* An error was fixed in email validation
+* A few minor cosmetic bugs were fixed
+* Trying to edit a review to be 5 star ratings would always end up with 4 stars
+* Editing ratings will now show the new star ratings image after editing.
 
 = 1.1.6 (02-20-2011) =
 * "Powered by" link now properly obeys the enabled/disabled setting

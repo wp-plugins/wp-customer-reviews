@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.1.6
+ * Version:       1.1.7
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.1.6';
+    var $plugin_version = '1.1.7';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $wpurl = '';
@@ -490,10 +490,11 @@ class WPCustomerReviews
                             <a href="?page=wpcr_view_reviews&amp;s=<?php echo $review->reviewer_ip; ?>"><?php echo $review->reviewer_ip; ?></a><br />
                             <div style="margin-left:-4px;">
                                 <div style="height:22px;" class="best_in_place" 
-                                     data-collection='[[1,"Rated 1 Star"],[2,"Rated 2 Stars"],[3,"Rated 3 Stars"],[4,"Rated 4 Stars"],[4,"Rated 5 Stars"]]' 
+                                     data-collection='[[1,"Rated 1 Star"],[2,"Rated 2 Stars"],[3,"Rated 3 Stars"],[4,"Rated 4 Stars"],[5,"Rated 5 Stars"]]' 
                                      data-url='<?php echo $update_path; ?>' 
                                      data-object='json'
                                      data-attribute='review_rating' 
+                                     data-callback='make_stars_from_rating'
                                      data-type='select'>
                                     <?php echo $this->output_rating($review->review_rating,false); ?>
                                 </div>
@@ -1221,7 +1222,7 @@ class WPCustomerReviews
         
         if ($this->options['ask_fields']['fname'] == 1) {
             if ($this->options['require_fields']['fname'] == 1) { $req = '*'; } else { $req = ''; }
-            $fields .= '<tr><td><label for="'.$rand_prefixes[0].'-fname" class="comment-field">Name: '.$req.'</label></td><td><input class="text-input" type="text" id="'.$rand_prefixes[0].'-fname" name="'.$rand_prefixes[0].'-fname" '.$this->p->fname.' /></td></tr>';
+            $fields .= '<tr><td><label for="'.$rand_prefixes[0].'-fname" class="comment-field">Name: '.$req.'</label></td><td><input class="text-input" type="text" id="'.$rand_prefixes[0].'-fname" name="'.$rand_prefixes[0].'-fname" value="'.$this->p->fname.'" /></td></tr>';
         }
         if ($this->options['ask_fields']['femail'] == 1) {
             if ($this->options['require_fields']['femail'] == 1) { $req = '*'; } else { $req = ''; }
@@ -1229,11 +1230,11 @@ class WPCustomerReviews
         }
         if ($this->options['ask_fields']['fwebsite'] == 1) { 
             if ($this->options['require_fields']['fwebsite'] == 1) { $req = '*'; } else { $req = ''; }
-            $fields .= '<tr><td><label for="'.$rand_prefixes[2].'-fwebsite" class="comment-field">Website: '.$req.'</label></td><td><input class="text-input" type="text" id="'.$rand_prefixes[2].'-fwebsite" name="'.$rand_prefixes[2].'-fwebsite" '.$this->p->fwebsite.' /></td></tr>';
+            $fields .= '<tr><td><label for="'.$rand_prefixes[2].'-fwebsite" class="comment-field">Website: '.$req.'</label></td><td><input class="text-input" type="text" id="'.$rand_prefixes[2].'-fwebsite" name="'.$rand_prefixes[2].'-fwebsite" value="'.$this->p->fwebsite.'" /></td></tr>';
         }
         if ($this->options['ask_fields']['ftitle'] == 1) { 
             if ($this->options['require_fields']['ftitle'] == 1) { $req = '*'; } else { $req = ''; }
-            $fields .= '<tr><td><label for="'.$rand_prefixes[3].'-ftitle" class="comment-field">Review Title: '.$req.'</label></td><td><input class="text-input" type="text" id="'.$rand_prefixes[3].'-ftitle" name="'.$rand_prefixes[3].'-ftitle" maxlength="150" '.$this->p->ftitle.' /></td></tr>';
+            $fields .= '<tr><td><label for="'.$rand_prefixes[3].'-ftitle" class="comment-field">Review Title: '.$req.'</label></td><td><input class="text-input" type="text" id="'.$rand_prefixes[3].'-ftitle" name="'.$rand_prefixes[3].'-ftitle" maxlength="150" value="'.$this->p->ftitle.'" /></td></tr>';
         }
         
         $some_required = '';
@@ -1327,7 +1328,7 @@ class WPCustomerReviews
             }
         }
         
-        if ($this->p->femail != '' && !preg_match('/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i', $this->p->femail)) {
+        if ($this->p->femail != '' && !preg_match('/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/', $this->p->femail)) {
             $errors .= 'The email address provided is not valid.<br />';
         }
         
@@ -1372,9 +1373,13 @@ class WPCustomerReviews
         // update page we are using, this will force it to update with caching plugins
         $pageID = $this->options['selected_pageid'];		
         $post = get_post($pageID);
-
-        if ($post) {
-            wp_update_post($post); // the magic
+        
+        if ($post) {           
+            wp_update_post($post); // the magic            
+        }
+        
+        if (function_exists('wp_cache_post_change')) {
+            wp_cache_post_change( $pageID ); /* just in case for wp super cache */
         }
     }
     

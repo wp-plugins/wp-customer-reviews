@@ -26,16 +26,14 @@ function valwpcrform_2(newid,oldid,err) {
     
     if (newid === 'femail' && jQuery("#"+oldid).val() !== "") {
         myval = jQuery("#"+oldid).val();
-        patt = new RegExp("/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i");
-        if (!patt.test(myval)) {
+        if (/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/.test(myval) == false) {
             err.push("The email address provided is not valid.");
         }
     }
     
     if (newid === 'fwebsite' && jQuery("#"+oldid).val() !== "") {
         myval = jQuery("#"+oldid).val();
-        patt = new RegExp("/^\S+:\/\/\S+\.\S+.+$/");
-        if (!patt.test(myval)) {
+        if (/^\S+:\/\/\S+\.\S+.+$/.test(myval) == false) {
             err.push("The website provided is not valid. Be sure to include http://");
         }
     }

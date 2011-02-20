@@ -24,9 +24,34 @@ jQuery(document).ready(function() {
         if ( jQuery(this).is(":checked") ) {
             jQuery("#ask_ftitle").attr('checked','checked');
         }
-    });
-    
+    });    
 });
+
+function make_stars_from_rating(me) {
+    
+    var w = '';
+    
+    switch (me.html()) {
+        case 'Rated 1 Star':
+            w = '20';
+            break;
+        case 'Rated 2 Stars':
+            w = '40';
+            break;
+        case 'Rated 3 Stars':
+            w = '60';
+            break;
+        case 'Rated 4 Stars':
+            w = '80';
+            break;
+        case 'Rated 5 Stars':
+            w = '100';
+            break;
+    }
+    
+    var out = '<div class="sp_rating"><div class="base"><div class="average" style="width:'+w+'%"></div></div></div>';
+    me.html(out);
+}
 
 /**
  * jquery.purr.js
@@ -223,7 +248,7 @@ BestInPlaceEditor.prototype = {
   // Public Interface Functions //////////////////////////////////////////////
 
   activate : function() {
-		var elem = this.isNil ? "" : this.element.html();
+    var elem = this.isNil ? "" : this.element.html();
     this.oldValue = elem;
     jQuery(this.activator).unbind("click", this.clickHandler);
     this.activateForm();
@@ -233,6 +258,7 @@ BestInPlaceEditor.prototype = {
     if (this.isNil) this.element.html(this.nil);
     else            this.element.html(this.oldValue);
     jQuery(this.activator).bind('click', {editor: this}, this.clickHandler);
+    if (this.callback != '') { window[this.callback](this.element); } /* AQ */
   },
 
   update : function() {
@@ -281,6 +307,7 @@ BestInPlaceEditor.prototype = {
       self.objectName    = self.objectName    || jQuery(this).attr("data-object");
       self.attributeName = self.attributeName || jQuery(this).attr("data-attribute");
       self.nil           = self.nil           || jQuery(this).attr("data-nil");
+      self.callback      = self.callback      || jQuery(this).attr("data-callback");
     });
 
     // Try Rails-id based if parents did not explicitly supply something
@@ -299,6 +326,7 @@ BestInPlaceEditor.prototype = {
     self.attributeName = self.element.attr("data-attribute")    || self.attributeName;
     self.activator     = self.element.attr("data-activator")    || self.element;
     self.nil           = self.element.attr("data-nil")          || self.nil      || "-";
+    self.callback      = self.element.attr("data-callback")     || self.callback || "";
 
     if (!self.element.attr("data-sanitize")) {
       self.sanitize = true;
@@ -368,6 +396,7 @@ BestInPlaceEditor.prototype = {
     this.element.html(data[this.objectName]);
     // Binding back after being clicked
     jQuery(this.activator).bind('click', {editor: this}, this.clickHandler);
+    if (this.callback != '') { window[this.callback](this.element); } /* AQ */
   },
 
   loadErrorCallback : function(request, error) {
@@ -381,6 +410,7 @@ BestInPlaceEditor.prototype = {
 
     // Binding back after being clicked
     jQuery(this.activator).bind('click', {editor: this}, this.clickHandler);
+    if (this.callback != '') { window[this.callback](this.element); } /* AQ */
   },
 
   clickHandler : function(event) {
