@@ -47,7 +47,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 = 1.1.8 (02-23-2011) =
 * Updated plugin to not use sessions at all to track error/status messages
 * Plugin will now automatically detect some theme/plugin compatibility issues and attempt workarounds
-* Updating CSS for error/thank you message container.
+* Updating CSS for error/thank you message container
 
 = 1.1.7 (02-20-2011) =
 * An error was fixed in email validation
@@ -108,40 +108,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * Some minor styling tweaks for better compatibility with various themes
 * Added a more detailed settings explanation to prevent confusion on plugin activation
 
-= 1.0.7 (02-15-2011) =
-* A couple of minor style tweaks for the chosen reviews page layout
-
-= 1.0.6 (02-14-2011) =
-* Several major bug fixes - too many to document each one.
-* More restrictive CSS styling to prevent interference with themes and other plugins
-* Added simple minification of outputted script and style sections
-* A flaw was identified and fixed in the handling of outputting the aggregate footer and business hCard.
-* The plugin now removes the filter `wpautop` on the page it is used on. This filter was causing WP to inject paragraphs for most line breaks, which broke validation and caused some issues with themes.
-
-= 1.0.5 (02-13-2011) =
-* `Selecting a page` to use the plugin on was only returning the last page. It will now display all pages
-* `Support Us` will remember your last saved setting, even between upgrades
-* `Selecting a page` now supports selecting and working on pages that are `hidden` by other plugins
-
-= 1.0.4 (02-13-2011) =
-* `Support Us` is now deselected on upgrades
-
-= 1.0.3 (02-03-2011) =
-* Admin email notification for future updates is now optional
-
-= 1.0.2 (02-02-2011) =
-* `Support Us` is not selected by default
-* Fixed a possible bug when upgrading versions of the plugin
-
-= 1.0.1 (01-30-2011) =
-* First public release
-* Added many more configuration options
-* Added searching capability for all reviews
-
-= 1.0.0 (01-05-2011) =
-* New: First Release (private)
-
 == Upgrade Notice ==
 
-= 1.1.5 =
-1.1.5 fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
+= 1.1.8 =
+1.1.8 fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
