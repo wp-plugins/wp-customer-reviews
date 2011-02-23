@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.1.7
+ * Version:       1.1.8
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.1.7';
+    var $plugin_version = '1.1.8';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $wpurl = '';
@@ -188,13 +188,8 @@ class WPCustomerReviews
             wp_enqueue_script('jquery');
             wp_register_script('wp-customer-reviews',$this->getpluginurl().'wp-customer-reviews.js',array(),$this->plugin_version);
             wp_enqueue_script('wp-customer-reviews');
-            
-            if (isset($_COOKIE['wpcr_status'])) {
-                session_start();
-                setcookie('wpcr_status','',time() - 86400); /* delete the cookie */
-            }
                   
-            /* do this here so we can wp_redirect */
+            /* do this here so we can redirect */
             if ($admin_area === null || $admin_area === false) {
                 $GET_P = "submitwpcr_$post->ID";
                                 
@@ -203,17 +198,21 @@ class WPCustomerReviews
 
                     $has_error = $msg[0];
                     $status_msg = $msg[1];
-
-                    session_start();
-                    $_SESSION['wpcr_status'] = $status_msg;
-                    setcookie('wpcr_status',1);
+                    $cookie = array('wpcr_status_msg' => $status_msg);
                     
-                    if ($has_error === false) {
-                        $url = get_permalink($post->ID);
-                        ob_end_clean();
-                        wp_redirect($url);
-                        exit();
-                    }
+					$url = get_permalink($post->ID);
+					
+					if (headers_sent() == true) {
+						$this->js_redirect($url,$cookie); /* use JS redirect and add cookie before redirect */
+					} else {
+						foreach ($cookie as $col => $val) {
+							setcookie($col,$val); /* add cookie via headers */
+						}
+						ob_end_clean();
+						wp_redirect($url); /* nice redirect */
+					}
+					
+					exit();
                 }
             }
         }
@@ -239,12 +238,7 @@ class WPCustomerReviews
         add_menu_page('Customer Reviews', 'Customer Reviews', 'edit_others_posts', 'wpcr_view_reviews', array(&$this, 'admin_view_reviews'), $this->getpluginurl().'star.png', 50); // 50 should be underneath comments
     }
     
-    function admin_view_reviews() {
-        if (!current_user_can('edit_others_posts'))
-        {
-            wp_die( __('You do not have sufficient permissions to access this page.') );
-        }
-        
+    function admin_view_reviews() {        
         global $wpdb;
         
         /* begin - actions */
@@ -411,7 +405,9 @@ class WPCustomerReviews
                 <li class="moderated"><a <?php if ($this->p->review_status == 0) { echo 'class="current"'; } ?> href="?page=wpcr_view_reviews&amp;review_status=0">Pending 
                     <span class="count">(<span class="pending-count"><?php echo $pending_count;?></span>)</span></a> |
                 </li>
-                <li class="approved"><a <?php if ($this->p->review_status == 1) { echo 'class="current"'; } ?> href="?page=wpcr_view_reviews&amp;review_status=1">Approved</a> |</li>
+                <li class="approved"><a <?php if ($this->p->review_status == 1) { echo 'class="current"'; } ?> href="?page=wpcr_view_reviews&amp;review_status=1">Approved
+					<span class="count">(<span class="pending-count"><?php echo $total_reviews;?></span>)</span></a> |
+				</li>
                 <li class="trash"><a <?php if ($this->p->review_status == 2) { echo 'class="current"'; } ?> href="?page=wpcr_view_reviews&amp;review_status=2">Trash</a>
                     <span class="count">(<span class="pending-count"><?php echo $trash_count;?></span>)</span></a>
                 </li>
@@ -1085,12 +1081,14 @@ class WPCustomerReviews
         $the_content = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>'; // our content
         
         $status_msg = '';
-        if ( isset( $_SESSION['wpcr_status'] ) ) {
-            $status_msg = $_SESSION['wpcr_status'];
-            unset($_SESSION['wpcr_status']);
+		$status_css = '';
+        if ( isset( $_COOKIE['wpcr_status_msg'] ) ) {
+            $status_msg = $_COOKIE['wpcr_status_msg'];
+            $status_msg .= "\n<script type='text/javascript'>\n<!--\nwpcr_del_cookie('wpcr_status_msg');\n//-->\n</script>\n";
+			$status_css = 'padding-bottom:15px;';
         }
                 
-        $the_content .= '<div id="wpcr_respond_1">'.$status_msg; /* show errors or thank you message here */
+        $the_content .= '<div id="wpcr_respond_1"><div style="'.$status_css.'" class="wpcr_status_msg">'.$status_msg.'</div>'; /* show errors or thank you message here */
         $the_content .= '<p><a id="wpcr_button_1" href="javascript:void(0);">'.$this->options['goto_leave_text'].'</a></p><hr />';
 		
         $arr_Reviews = $this->get_reviews($this->page,$this->options['reviews_per_page'],1);
@@ -1353,7 +1351,7 @@ class WPCustomerReviews
         }
         
         /* returns true for errors */
-        if ($errors) { return array(true,'<div style="color:#c00;font-weight:bold;padding-bottom:15px;">'.$errors.'</div>'); }
+        if ($errors) { return array(true,"<div class='wpcr_status_msg'>$errors</div>"); }
         /* end - server-side validation */
         
         $query = $wpdb->prepare("INSERT INTO `$this->dbtable` 
@@ -1420,14 +1418,17 @@ class WPCustomerReviews
         return $response;
     }
     
-    function js_redirect($url) {
-        return '
-        <div style="clear:both;text-align:center;padding:10px;">Processing... Please wait...</div>
-        <script type="text/javascript">
-        <!--
-          window.location= "'.$url.'";
-        //-->
-        </script>';
+    function js_redirect($url,$cookie = array()) {
+        $out = "
+        <div style='clear:both;text-align:center;padding:10px;'>Processing... Please wait...</div>
+        <script type='text/javascript'>\n<!--\n";
+		  foreach ($cookie as $col => $val) {
+			 $val = preg_replace("/\r?\n/", "\\n", addslashes($val));
+		     $out .= "document.cookie=\"$col=$val\";\n";
+		  }
+		  $out .= "window.location='$url';\n";
+		  $out .= "//-->\n</script>\n";
+		return $out;
     }
     	
     function init() { /* used for init and admin_init */    
@@ -1475,8 +1476,15 @@ class WPCustomerReviews
             if ($this->p->action == 'activate-plugin') { return false; } /* no auto settings redirect if upgrading */
                    
             $url = $this->get_admin_path().'options-general.php?page=wpcr_options';
-            ob_end_clean();
-            wp_redirect($url);
+			
+			if (headers_sent() == true) {
+				$this->js_redirect($url); /* use JS redirect */
+			} else {
+				ob_end_clean();
+				wp_redirect($url); /* nice redirect */
+			}
+			
+			exit();
         }
     }
     

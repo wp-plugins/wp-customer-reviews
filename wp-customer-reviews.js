@@ -11,6 +11,10 @@ function wpcr_ucfirst(str) {
     return firstLetter.toUpperCase() + str.substring(1);
 }
 
+function wpcr_del_cookie(name) {
+    document.cookie = name + '=; expires=Thu, 01-Jan-70 00:00:01 GMT;';
+}
+
 function valwpcrform_2(newid,oldid,err) {  
     
     var myval = '';
