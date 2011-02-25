@@ -82,7 +82,8 @@ function valwpcrform(me) {
         return false;
     }
 
-    jQuery(me).attr("action","");
+	var f = jQuery("#wpcr_commentform");
+	f.attr("action","").removeAttr("onsubmit");
     return true;
 }
 

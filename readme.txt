@@ -4,7 +4,7 @@ Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget
 Requires at least: 3.0
 Tested up to: 3.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -43,6 +43,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
 
 == Changelog ==
+
+= 1.2.1 (02-25-2011) =
+* The last update caused a bug where the form would never be submitted. This has been corrected.
 
 = 1.2.0 (02-25-2011) =
 * Fixed an issue in the admin area where line breaks would appear to be lost when editing reviews.
@@ -100,17 +103,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 = 1.1.1 (02-17-2011) =
 * Force caching plugins to update the page upon approval/disapproval/deletion of reviews
 
-= 1.1.0 (02-16-2011) =
-* Using jQuery.click instead of jQuery.live since some versions of jQuery are not obeying .live (and should)
-
-= 1.0.9 (02-16-2011) =
-* Updated star image and added option so you can pick your own star colors
-* Updated star rating styles to prevent layout issues with themes
-* Updated styling method to give more priority to plugin styles when inside the plugin
-* Prevented automatic redirect to settings page when upgrading
-* Made "powered by" link use a smaller font size
-
 == Upgrade Notice ==
 
-= 1.2.0 =
-1.2.0 fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
+= 1.2.1 =
+Fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
