@@ -297,8 +297,11 @@ class WPCustomerReviews
                                         echo json_encode(array("errors" => 'Bad Value'));
                                         exit(); 
                                     }
+									
+									$val = str_replace( array("<br />","<br/>","<br>") , "" , $val ); /* remove extra breaks, these should be newlines */
                                     $show_val = $val;
-                                    $update_col = mysql_real_escape_string($col);
+									
+									$update_col = mysql_real_escape_string($col);
                                     $update_val = mysql_real_escape_string($val);
                                     break;
                             }
@@ -308,7 +311,7 @@ class WPCustomerReviews
                         if ($update_col !== false && $update_val !== false) {
                             $query = "UPDATE `$this->dbtable` SET `$update_col`='$update_val' WHERE id={$this->p->r} LIMIT 1";
                             $wpdb->query($query);
-                            echo $val;
+                            echo $show_val;
                         }
                         
                         exit();
@@ -473,6 +476,8 @@ class WPCustomerReviews
                       $review->review_text = stripslashes($review->review_text);
                       $review->reviewer_name = stripslashes($review->reviewer_name);
                       if ($review->reviewer_name == '') { $review->reviewer_name = 'Anonymous'; }
+					  $review_text = nl2br($review->review_text);
+					  $review_text = str_replace( array("\r\n","\r","\n") , "" , $review_text );
                   ?>
                       <tr class="approved" id="review-<?php echo $rid;?>">
                         <th class="check-column" scope="row"><input type="checkbox" value="<?php echo $rid;?>" name="delete_reviews[]" /></th>
@@ -508,13 +513,13 @@ class WPCustomerReviews
                                     class="best_in_place" 
                                     data-url='<?php echo $update_path; ?>' 
                                     data-object='json'
-                                    data-attribute='review_title'><?php echo nl2br($review->review_title); ?></span><br /><br />
+                                    data-attribute='review_title'><?php echo $review->review_title; ?></span><br /><br />
                               <div class="best_in_place" 
                                     data-url='<?php echo $update_path; ?>' 
                                     data-object='json'
                                     data-attribute='review_text' 
 									data-callback='callback_review_text'
-                                    data-type='textarea'><?php echo nl2br($review->review_text); ?></div>
+                                    data-type='textarea'><?php echo $review_text; ?></div>
                           </p>
                           <div class="row-actions">
                             <span class="approve <?php if ($review->status == 0 || $review->status == 2) { echo 'wpcr_show'; } else { echo 'wpcr_hide'; }?>"><a title="Mark as Approved"
