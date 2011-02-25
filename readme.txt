@@ -112,5 +112,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 1.1.9 =
-1.1.9 fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
+= 1.2.0 =
+1.2.0 fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
