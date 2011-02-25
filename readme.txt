@@ -44,6 +44,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 1.2.0 (02-25-2011) =
+* Fixed an issue in the admin area where line breaks would appear to be lost when editing reviews.
+
 = 1.1.9 (02-24-2011) =
 * Restructured some Javascript validation to prevent an odd jQuery conflict
 

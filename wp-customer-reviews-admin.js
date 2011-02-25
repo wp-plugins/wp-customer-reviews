@@ -27,6 +27,22 @@ jQuery(document).ready(function() {
     });    
 });
 
+function wpcr_nl2br(str)
+{
+	return str.replace(/(\r\n|\r|\n)/g, "<br />");
+}
+
+function wpcr_br2nl(str)
+{
+	return str.replace(/(<br \/>|<br>|<br >|<br\/>)/g, "\r\n");
+}
+
+function callback_review_text(me) {
+	var mehtml = jQuery(me).html();
+	mehtml = wpcr_nl2br(mehtml);
+	jQuery(me).html(mehtml);
+}
+
 function make_stars_from_rating(me) {
     
     var w = '';
@@ -363,7 +379,7 @@ BestInPlaceEditor.prototype = {
     if (this.sanitize)
     {
       var tmp = document.createElement("DIV");
-      tmp.innerHTML = s;
+      tmp.innerHTML = wpcr_br2nl(s);
       s = tmp.textContent || tmp.innerText;
     }
    return jQuery.trim(s);
