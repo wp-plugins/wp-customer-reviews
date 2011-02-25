@@ -78,7 +78,7 @@ function valwpcrform(me) {
     if (err.length) {
         var err2 = err.join("\n");
         alert(err2);
-        jQuery("#wpcr_table_2").find(":text").first().focus();
+        jQuery("#wpcr_table_2").find(":text:first").focus();
         return false;
     }
 
@@ -110,6 +110,7 @@ function wpcr_showform() {
 
 jQuery(document).ready(function(){
     jQuery("#wpcr_button_1").click(wpcr_showform);
+	jQuery("#wpcr_commentform").submit(valwpcrform);
 
     jQuery("#wpcr_commentform .wpcr_rating a").click(function(e) {
             e.preventDefault();
