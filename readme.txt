@@ -4,7 +4,7 @@ Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget
 Requires at least: 3.0
 Tested up to: 3.1
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -44,6 +44,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 1.2.4 (02-25-2011) =
+* Quick fix to the epic failure of the previous update. Everything should be back to normal now.
+
 = 1.2.3 (02-25-2011) =
 * Updated the method we use for appending the_content. We now use add_action instead of add_filter to try to solve some theme problems.
 
@@ -75,22 +78,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * When checking required fields in settings, the "ask for" fields will now automatically be checked
 * "Show name" now properly obeys the enabled/disabled settings. For hReview, it will show up as Anonymous.
 
-= 1.1.5 (02-20-2011) =
-* Some minor CSS fixes, cleanups, and added some spacing to fields
-* Added options for which fields to ask for (and show) on the reviews page
-* Review form is now displayed using tables to make it more appealing and flexible
-* Fixing line break formatting of reviews on review page
-* Review form is now hidden on default, and opens with a styled button with animation when a user clicks to submit a review
-* Added option for choosing to use an h2, h3, or h4 for review titles
-* Added pagination to review page with option of # shown per page
-* Javascript is now loaded externally to prevent odd issues and allow for easier customizations
-* You may now edit date, title, name, and text of reviews in the admin area
-* Reviews may now be permanently deleted via the admin area
-* Cleaned up some redirects and methods used
-* Some additional anti-spam measures are now used.. just because we can
-* Refreshing pages will no longer try to repost the review form
-
 == Upgrade Notice ==
 
-= 1.2.3 =
+= 1.2.4 =
 Fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.

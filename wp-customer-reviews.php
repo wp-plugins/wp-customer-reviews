@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.2.3
+ * Version:       1.2.4
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,12 +28,13 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.2.3';
+    var $plugin_version = '1.2.4';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $wpurl = '';
     var $got_aggregate = false;
     var $shown_aggregate = false;
+	var $shown_hcard = false;
     var $p = '';
     var $page = 1;
 
@@ -43,8 +44,7 @@ class WPCustomerReviews
 		
         add_filter('plugin_action_links_'.plugin_basename(__FILE__), array(&$this, 'plugin_settings_link'));
 
-		add_action('the_content', array(&$this, 'show_reviews'), 5);
-        add_action('the_content', array(&$this, 'aggregate_footer'), 5);
+		add_action('the_content', array(&$this, 'do_the_content'), 5);
 		
         add_action('init', array(&$this, 'init'));
         add_action('admin_init', array(&$this, 'admin_init'));
@@ -889,7 +889,7 @@ class WPCustomerReviews
         $total_reviews = $row[0]->total;
         
         $row = $wpdb->get_results( "SELECT review_text FROM `$this->dbtable` WHERE status=1 ORDER BY id DESC LIMIT 1 " );
-	$sample_text = substr($row[0]->review_text,0,180);
+		$sample_text = substr($row[0]->review_text,0,180);
         
         $this->got_aggregate = array("aggregate" => $aggregate_rating,"max" => $max_rating,"total" => $total_reviews,"text" => $sample_text);
         return true;
@@ -924,13 +924,16 @@ class WPCustomerReviews
         return array($reviews,$total_reviews);
     }
     
-    function aggregate_footer() {
-        
-        $output2 = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>';
-        $output2 .= $this->output_aggregate();
+    function aggregate_footer()
+	{
+        $output2 = $this->output_aggregate();
 		
-        if ($this->options['show_hcard_on'] != 0) {
-					
+        if ($this->options['show_hcard_on'] != 0 && $this->shown_hcard === false)
+		{
+			remove_filter ('the_content', 'wpautop'); /* to validate */
+		
+			$this->shown_hcard = true;
+		
             // start - make sure we should continue
             global $post;
             $show = false;
@@ -960,23 +963,24 @@ class WPCustomerReviews
 			$output2 = preg_replace('/\n\r|\r\n|\n|\r|\t|\s{2}/', '', $output2); /* minify */
         }
         
-        return $output2;
+       return $output2;
     }
     
     function output_aggregate() {
         global $post;
+		
+		$content = '';
 
         // start - make sure we should continue
-        global $post;
         $is_active_page = $this->options['selected_pageid'] == $post->ID;		
         if ($this->options['show_aggregate_on'] == 2 && !$is_active_page) { return ''; } // return nothing if not on review page
         if ($this->options['show_aggregate_on'] == 1 ) { // homepage and chosen review page
-                if ( !is_home() && !is_front_page() && !$is_active_page ) { return ''; } // not on homepage, not on review page
+			if ( !is_home() && !is_front_page() && !$is_active_page ) { return ''; } // not on homepage, not on review page
         }
         if ($this->shown_aggregate) { return ''; } // dont show if already shown once
         // end - make sure we should continue
-
-        if ( is_home() || is_front_page() ) { $homepage = 1; } else { $homepage = 0; }
+		
+		remove_filter ('the_content', 'wpautop'); /* to validate */
 		
         $this->get_aggregate_reviews(); /* get aggregate reviews into $this->got_aggregate */
         
@@ -1078,12 +1082,17 @@ class WPCustomerReviews
          }
     }
 
-    function show_reviews() {
+    function do_the_content($original_content) {
         global $post;
         
-        if ($this->options['selected_pageid'] != $post->ID) { return $the_content_original; }
+		$the_content = '';
 		
-        $the_content = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>'; // our content
+        if ($this->options['selected_pageid'] != $post->ID) { 
+			$the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer then */
+			return $original_content.$the_content;
+		}
+		
+		remove_filter ('the_content', 'wpautop'); /* to validate */
         
         $status_msg = '';
 		$status_css = '';
@@ -1173,7 +1182,7 @@ class WPCustomerReviews
             }
         }
         
-        $the_content .= $this->output_aggregate();
+        $the_content .= $this->output_aggregate(); /* call here for the reviews page so it doesn't end up in the unimportant footer */
         $the_content .= $this->show_reviews_form($status_msg);
         $the_content .= $reviews_content;
         $the_content .= $this->pagination($total_reviews);
@@ -1181,8 +1190,10 @@ class WPCustomerReviews
             $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
         }
         $the_content .= '</div>';
-        
-        echo $the_content;
+		
+		$the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer also */
+		
+		return $original_content.$the_content;
     }
 	
     function output_rating($rating,$enable_hover) {

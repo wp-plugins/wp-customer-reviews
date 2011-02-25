@@ -36,7 +36,7 @@
 
 #wpcr_commentform #fconfirm2 { width:auto !important; }
 
-#wpcr_respond_1, #wpcr_respond_2 { margin:0 !important; padding:0 !important; }
+#wpcr_respond_1, #wpcr_respond_2 { margin:0 !important; padding:0 !important; clear:both !important; }
 #wpcr_respond_1 p, #wpcr_respond_2 p { 
     margin:0 !important;
     padding:0 !important;
