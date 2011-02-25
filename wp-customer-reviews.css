@@ -66,6 +66,8 @@
 
 #wpcr_commentform input  { padding:0 !important; margin:0 !important; width:200px !important;  }
 #wpcr_commentform textarea { padding:0 !important; margin:0 !important; width:400px !important; height:100px !important; }
+#wpcr_commentform small { padding:0 !important; margin:0 !important; }
+#wpcr_commentform table, #wpcr_commentform td { border:0 !important; border-style:none !important; }
 
 #wpcr_commentform .sp_rating { line-height:1.7em; display:block; }
 #wpcr_commentform  .sp_rating * { border:0 none; margin:0; padding:0; }
