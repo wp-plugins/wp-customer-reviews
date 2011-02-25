@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       1.2.2
+ * Version:       1.2.3
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -28,7 +28,7 @@
 class WPCustomerReviews
 {
     var $plugin_name = 'WP Customer Reviews';
-    var $plugin_version = '1.2.2';
+    var $plugin_version = '1.2.3';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $wpurl = '';
@@ -41,10 +41,11 @@ class WPCustomerReviews
         global $table_prefix;
         $this->dbtable = $table_prefix.$this->dbtable;
 		
-        add_filter('the_content', array(&$this, 'show_reviews'), 1);
-        add_filter('the_content', array(&$this, 'aggregate_footer'), 1);
         add_filter('plugin_action_links_'.plugin_basename(__FILE__), array(&$this, 'plugin_settings_link'));
 
+		add_action('the_content', array(&$this, 'show_reviews'), 5);
+        add_action('the_content', array(&$this, 'aggregate_footer'), 5);
+		
         add_action('init', array(&$this, 'init'));
         add_action('admin_init', array(&$this, 'admin_init'));
         add_action('admin_menu', array(&$this, 'addmenu'));
@@ -923,7 +924,7 @@ class WPCustomerReviews
         return array($reviews,$total_reviews);
     }
     
-    function aggregate_footer($existing_output) {
+    function aggregate_footer() {
         
         $output2 = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>';
         $output2 .= $this->output_aggregate();
@@ -944,22 +945,22 @@ class WPCustomerReviews
                     <div id="wpcr-hcard" class="vcard" style="display:none;">
                          <a class="url fn org" href="'.$this->options['business_url'].'">'.$this->options['business_name'].'</a>
                          <a class="email" href="mailto:'.$this->options['business_email'].'">'.$this->options['business_email'].'</a>
-                         <div class="adr">
-                              <div class="street-address">'.$this->options['business_street'].'</div>
-                              <span class="locality">'.$this->options['business_city'].'</span>,
+                         <span class="adr">
+                              <span class="street-address">'.$this->options['business_street'].'</span>
+							  <span class="locality">'.$this->options['business_city'].'</span>,
                               <span class="region">'.$this->options['business_state'].'</span>,
-                              <span class="postal-code">'.$this->options['business_zip'].'</span>
+							  <span class="postal-code">'.$this->options['business_zip'].'</span>
                               <span class="country-name">'.$this->options['business_country'].'</span>
-                         </div>
-                         <div class="tel">'.$this->options['business_phone'].'</div>
+                         </span>
+						 <span class="tel">'.$this->options['business_phone'].'</span>
                     </div>
                     ';
             }
 
-            $output2 = str_replace(array("\r","\n","\t","\r\n","  "),'',$output2); /* minify */
+			$output2 = preg_replace('/\n\r|\r\n|\n|\r|\t|\s{2}/', '', $output2); /* minify */
         }
         
-        return $existing_output.$output2; // return combined content
+        return $output2;
     }
     
     function output_aggregate() {
@@ -1077,12 +1078,10 @@ class WPCustomerReviews
          }
     }
 
-    function show_reviews($the_content_original) {
+    function show_reviews() {
         global $post;
         
         if ($this->options['selected_pageid'] != $post->ID) { return $the_content_original; }
-        
-        remove_filter('the_content', 'wpautop'); // keep wp from turning our newlines into <p>
 		
         $the_content = '<div style="clear:both;margin:0;padding:0;">&nbsp;</div>'; // our content
         
@@ -1183,7 +1182,7 @@ class WPCustomerReviews
         }
         $the_content .= '</div>';
         
-        return $the_content_original.$the_content; // return combined content
+        echo $the_content;
     }
 	
     function output_rating($rating,$enable_hover) {

@@ -4,7 +4,7 @@ Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget
 Requires at least: 3.0
 Tested up to: 3.1
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -43,6 +43,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
 
 == Changelog ==
+
+= 1.2.3 (02-25-2011) =
+* Updated the method we use for appending the_content. We now use add_action instead of add_filter to try to solve some theme problems.
 
 = 1.2.2 (02-25-2011) =
 * Updated some CSS to avoid some more theme issues.
@@ -87,12 +90,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * Some additional anti-spam measures are now used.. just because we can
 * Refreshing pages will no longer try to repost the review form
 
-= 1.1.4 (02-17-2011) =
-* Plugin now actually obeys the options for where to output the hCard and Aggregate Reviews
-* Fixed an issue where reviews were not showing up on some themes, due to the order of events
-* Some minor code cleanups and internal improvements
-
 == Upgrade Notice ==
 
-= 1.2.2 =
+= 1.2.3 =
 Fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
