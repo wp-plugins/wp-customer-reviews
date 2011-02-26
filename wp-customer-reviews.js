@@ -22,8 +22,11 @@ function valwpcrform_2(newid,oldid,err) {
     
     for (var i in wpcr_req) {
         var col = wpcr_req[i];
-        if (newid === col && jQuery("#"+oldid).val() === "") {
-            var nice_name = wpcr_ucfirst(col.substring(1));
+        if (newid === col && jQuery("#"+oldid).val() === "") {			
+			var nice_name = jQuery('label[for="'+oldid+'"]').html();
+			nice_name = nice_name.replace(":","");
+			nice_name = nice_name.replace("*","");
+			nice_name = jQuery.trim(nice_name);
             err.push("You must include your "+nice_name+".");
         }
     }
@@ -67,7 +70,11 @@ function valwpcrform(me) {
     jQuery("#wpcr_commentform").find('input, textarea').each(function(){
         var oldid = jQuery(this).attr('name');
         var pos = wpcr_strpos(oldid,'-',0) + 1;
-        var newid = oldid.substring(pos);
+		if (pos > 1) {
+			var newid = oldid.substring(pos);
+		} else {
+			var newid = oldid;
+		}
         err = valwpcrform_2(newid,oldid,err);
     });
     

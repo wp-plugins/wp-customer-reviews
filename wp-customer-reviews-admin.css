@@ -23,6 +23,10 @@
   cursor: pointer;
 }
 
+#wpcr_ad label {
+	vertical-align:inherit !important;
+}
+
 .purr {
     position: fixed;
     width: 324px;

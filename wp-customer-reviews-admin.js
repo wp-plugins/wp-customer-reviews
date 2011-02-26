@@ -2,29 +2,75 @@ jQuery(document).ready(function() {
     
     jQuery(".best_in_place").best_in_place();
     
-    jQuery("#require_fname").click(function(){
+    jQuery("#require_fname, #show_fname").click(function(){
         if ( jQuery(this).is(":checked") ) {
             jQuery("#ask_fname").attr('checked','checked');
         }
+		else if ( jQuery("#ask_fname").not(":checked") ) {
+			jQuery("#show_fname").removeAttr('checked');
+			jQuery("#require_fname").removeAttr('checked');
+		}
     });
     
-    jQuery("#require_femail").click(function(){
+    jQuery("#require_femail, #show_femail").click(function(){
         if ( jQuery(this).is(":checked") ) {
             jQuery("#ask_femail").attr('checked','checked');
         }
+		else if ( jQuery("#ask_femail").not(":checked") ) {
+			jQuery("#show_femail").removeAttr('checked');
+			jQuery("#require_femail").removeAttr('checked');
+		}
     });
     
-    jQuery("#require_fwebsite").click(function(){
+    jQuery("#require_fwebsite, #show_fwebsite").click(function(){
         if ( jQuery(this).is(":checked") ) {
             jQuery("#ask_fwebsite").attr('checked','checked');
         }
+		else if ( jQuery("#ask_fwebsite").not(":checked") ) {
+			jQuery("#show_fwebsite").removeAttr('checked');
+			jQuery("#require_fwebsite").removeAttr('checked');
+		}
     });
     
-    jQuery("#require_ftitle").click(function(){
+    jQuery("#require_ftitle, #show_ftitle").click(function(){
         if ( jQuery(this).is(":checked") ) {
             jQuery("#ask_ftitle").attr('checked','checked');
         }
-    });    
+		else if ( jQuery("#ask_ftitle").not(":checked") ) {
+			jQuery("#show_ftitle").removeAttr('checked');
+			jQuery("#require_ftitle").removeAttr('checked');
+		}
+    });
+	
+	jQuery("#ask_fname, #ask_femail, #ask_fwebsite, #ask_ftitle").click(function(){
+		if ( jQuery(this).not(":checked") ) {
+			var datawhat = jQuery(this).attr('data-what');
+			jQuery("#show_"+datawhat).removeAttr('checked');
+			jQuery("#require_"+datawhat).removeAttr('checked');
+		}
+	});
+
+	jQuery(".custom_req, .custom_show").each(function(){
+		jQuery(this).click(function(){
+			var dataid = jQuery(this).attr('data-id');
+			
+			if ( jQuery(this).is(":checked") ) {
+				jQuery("#ask_custom"+dataid).attr('checked','checked');
+			}
+			else if ( jQuery("#ask_custom"+dataid).not(":checked") ) {
+				jQuery("#show_custom"+dataid).removeAttr('checked');
+				jQuery("#require_custom"+dataid).removeAttr('checked');
+			}
+		});
+	});
+	
+	jQuery(".custom_ask").click(function(){
+		if ( jQuery(this).not(":checked") ) {
+			var dataid = jQuery(this).attr('data-id');
+			jQuery("#show_custom"+dataid).removeAttr('checked');
+			jQuery("#require_custom"+dataid).removeAttr('checked');
+		}
+	});
 });
 
 function wpcr_nl2br(str)
