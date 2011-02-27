@@ -64,11 +64,6 @@
 
 #wpcr_respond_2 { display:none; background-color:inherit; }
 
-#wpcr_commentform input  { padding:0 !important; margin:0 !important; width:200px !important;  }
-#wpcr_commentform textarea { padding:0 !important; margin:0 !important; width:400px !important; height:100px !important; }
-#wpcr_commentform small { padding:0 !important; margin:0 !important; }
-#wpcr_commentform table, #wpcr_commentform td { border:0 !important; border-style:none !important; }
-
 #wpcr_commentform .sp_rating { line-height:1.7em; display:block; }
 #wpcr_commentform  .sp_rating * { border:0 none; margin:0; padding:0; }
 
@@ -99,50 +94,57 @@
 #wpcr_check_confirm { margin-top:10px;font-size:13px;color:#c00;margin-bottom:4px; }
 
 #wpcr_button_1, #wpcr_button_1:link, #wpcr_button_1:visited, #wpcr_submit_btn, #wpcr_submit_btn:link, #wpcr_submit_btn:visited {
-  -moz-border-radius: 3px;
-  -webkit-border-radius: 3px;
-  background: white url('button.png') 0 0 repeat-x; 
-  background: -moz-linear-gradient(0% 170% 90deg, #c4c4c4, white);
-  background: -webkit-gradient(linear, 0% 0%, 0% 170%, from(white), to(#c4c4c4));
-  border: 1px solid;
-  border-color: #e6e6e6 #cccccc #cccccc #e6e6e6;
-  border-radius: 3px;
-  color: #404040;
-  cursor:pointer;
-  display: inline-block;
-  font-family: "helvetica neue", helvetica, arial, freesans, "liberation sans", "numbus sans l", sans-serif;
-  font-size: 13px;
-  font-weight: normal;
-  outline: 0;
-  padding: 5px 8px 5px;
-  text-align: center;
-  text-decoration: none;
-  text-shadow: 1px 1px 0 white; 
-  white-space: nowrap;
+  -moz-border-radius: 3px !important;
+  -webkit-border-radius: 3px !important;
+  background: white url('button.png') 0 0 repeat-x !important; 
+  background: -moz-linear-gradient(0% 170% 90deg, #c4c4c4, white) !important;
+  background: -webkit-gradient(linear, 0% 0%, 0% 170%, from(white), to(#c4c4c4)) !important;
+  border: 1px solid !important;
+  border-color: #e6e6e6 #cccccc #cccccc #e6e6e6 !important;
+  border-radius: 3px !important;
+  color: #404040 !important;
+  cursor:pointer !important;
+  display: inline-block !important;
+  font-size: 13px !important;
+  font-weight: normal !important;
+  outline: 0 !important;
+  padding: 5px 8px 5px !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  text-shadow: 1px 1px 0 white !important; 
+  white-space: nowrap !important;
+  float:none !important;
+  height:auto !important;
+  text-indent:0 !important;
  }
 
 #wpcr_button_1:hover, #wpcr_submit_btn:hover {
-    background: -moz-linear-gradient(0% 170% 90deg, #b8b8b8, white);
-    background: -webkit-gradient(linear, 0% 0%, 0% 170%, from(white), to(#b8b8b8));
-    border-color: #99ccff;
-    color: #333333;
-    cursor:pointer;
-    font-weight: normal;
+    background: -moz-linear-gradient(0% 170% 90deg, #b8b8b8, white) !important;
+    background: -webkit-gradient(linear, 0% 0%, 0% 170%, from(white), to(#b8b8b8)) !important;
+    border-color: #99ccff !important;
+    color: #333333 !important;
+    cursor:pointer !important;
+    font-weight: normal !important;
 }
 
 #wpcr_button_1:active, #wpcr_submit_btn:active {
-    position: relative;
-    top: 1px; 
+    position: relative !important;
+    top: 1px !important; 
 }
 
 #wpcr_button_1:active, #wpcr_button_1:focus, #wpcr_submit_btn:active, #wpcr_submit_btn:focus {
-    background-position: 0 -25px;
-    background: -moz-linear-gradient(0% 170% 90deg, white, #dedede);
-    background: -webkit-gradient(linear, 0% 0%, 0% 170%, from(#dedede), to(white));
-    border-color: #8fc7ff #94c9ff #94c9ff #8fc7ff;
-    color:#1a1a1a;
-    text-shadow: 1px -1px 0 rgba(255, 255, 255, 0.5); 
+    background-position: 0 -25px !important;
+    background: -moz-linear-gradient(0% 170% 90deg, white, #dedede) !important;
+    background: -webkit-gradient(linear, 0% 0%, 0% 170%, from(#dedede), to(white)) !important;
+    border-color: #8fc7ff #94c9ff #94c9ff #8fc7ff !important;
+    color:#1a1a1a !important;
+    text-shadow: 1px -1px 0 rgba(255, 255, 255, 0.5) !important; 
 }
+
+#wpcr_commentform input  { padding:0; margin:0 !important; width:200px !important;  }
+#wpcr_commentform textarea { padding:0 !important; margin:0 !important; width:400px !important; height:100px !important; }
+#wpcr_commentform small { padding:0 !important; margin:0 !important; }
+#wpcr_commentform table, #wpcr_commentform td { border:0 !important; border-style:none !important; }
 
 #wpcr_pagination {
     clear:both;

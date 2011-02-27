@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.0.1
+ * Version:       2.0.2
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.0.1';
+    var $plugin_version = '2.0.2';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -881,11 +881,11 @@ class WPCustomerReviews
             }
         }
         
-        if ($this->p->femail != '' && !preg_match('/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/', $this->p->femail)) {
+        if (!preg_match('/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/', $this->p->femail)) {
             $errors .= 'The email address provided is not valid.<br />';
         }
         
-        if ($this->p->fwebsite != '' && !preg_match('/^\S+:\/\/\S+\.\S+.+$/', $this->p->fwebsite)) {
+        if (!preg_match('/^\S+:\/\/\S+\.\S+.+$/', $this->p->fwebsite)) {
             $errors .= 'The website provided is not valid. Be sure to include http://<br />';
         }
         
