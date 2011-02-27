@@ -316,9 +316,9 @@ class WPCustomerReviewsAdmin
             
             if ($this->p->Submit == 'OK!') {
                 $updated_options['act_email'] = $this->p->email;
-                $this->parentClass->notify_activate($updated_options['act_email'],1);
+                $this->notify_activate($updated_options['act_email'],1);
             } else {
-                $this->parentClass->notify_activate('',1);
+                $this->notify_activate('',1);
             }
             
             $updated_options['activate'] = 1;
