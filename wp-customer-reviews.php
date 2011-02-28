@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.0.3
+ * Version:       2.0.4
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.0.3';
+    var $plugin_version = '2.0.4';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -270,7 +270,7 @@ class WPCustomerReviews
 
 		$size = strlen( $chars );
 		for( $i = 0; $i < $length; $i++ ) {
-				$str .= $chars[ rand( 0, $size - 1 ) ];
+			$str .= $chars[ rand( 0, $size - 1 ) ];
 		}
 
 		return $str;
@@ -920,14 +920,15 @@ class WPCustomerReviews
         return array(false,'<div style="color:#c00;font-weight:bold;padding-bottom:15px;padding-top:15px;">Thank you for your comments. All submissions are moderated and if approved, yours will appear soon.</div>');
     }
     
-    function deactivate() {
-		global $WPCustomerReviewsAdmin;
-		$this->include_admin(); /* include admin functions */
-		
-		$this->options['activate'] = 0;
-		update_option('wpcr_options', $this->options);
-		
-        $WPCustomerReviewsAdmin->notify_activate(2);
+    function deactivate() {		
+		if ($this->p->action != 'upgrade-plugin')
+		{
+			$this->options['activate'] = 0;
+			update_option('wpcr_options', $this->options);
+			global $WPCustomerReviewsAdmin;
+			$this->include_admin(); /* include admin functions */
+			$WPCustomerReviewsAdmin->notify_activate(2);
+		}
     }
     
     function js_redirect($url,$cookie = array()) {

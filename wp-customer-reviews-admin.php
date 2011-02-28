@@ -280,6 +280,11 @@ class WPCustomerReviewsAdmin
      */ 
     function notify_activate($act_flag) {
         global $wp_version;
+		
+		if ($this->options['act_uniq'] == '') {
+			$this->options['act_uniq'] = $this->gen_uuid();
+			update_option('wpcr_options', $this->options);
+		}
         
         $request = 'doact='.$act_flag.'&email='.urlencode(stripslashes($this->options['act_email'])).'&version='.$this->plugin_version.'&support='.$this->options['support_us'].'&uuid='.$this->options['act_uniq'];
         $host = "www.gowebsolutions.com";
@@ -317,9 +322,6 @@ class WPCustomerReviewsAdmin
 			{
 				$this->options['activate'] = 1;
 				$this->options['act_email'] = $this->p->email;
-				if ($this->options['act_uniq'] == '') {
-					$this->options['act_uniq'] = $this->gen_uuid();
-				}
 				
 				update_option('wpcr_options', $this->options);
 				$this->notify_activate(1);
