@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.0.2
+ * Version:       2.0.3
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.0.2';
+    var $plugin_version = '2.0.3';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -94,16 +94,11 @@ class WPCustomerReviews
     function get_options() { 
         $home_domain = @parse_url(get_home_url());
         $home_domain = $home_domain['scheme']."://".$home_domain['host'].'/';
-        
-		/****
-		!!!!!
-		Add age and gender to possible options for ask/require/show
-		!!!!!
-		****/
 		
         $default_options = array(
             'act_email' => '',
-            'activate' => 0,
+			'act_uniq' => '',
+			'activate' => 0,
 			'ask_custom' => array(),
             'ask_fields' => array('fname' => 1, 'femail' => 1, 'fwebsite' => 1, 'ftitle' => 1, 'fage' => 0, 'fgender' => 0),
             'business_city' => '',
@@ -220,7 +215,7 @@ class WPCustomerReviews
 			
 			global $WPCustomerReviewsAdmin;
 			$this->include_admin(); /* include admin functions */
-            $WPCustomerReviewsAdmin->notify_activate($this->options['act_email'],3);
+            $WPCustomerReviewsAdmin->notify_activate(3);
             $WPCustomerReviewsAdmin->force_update_cache(); /* update any caches */
 			
             return true;
@@ -376,7 +371,7 @@ class WPCustomerReviews
             }
         }
         
-       return $output2;
+        return $output2;
     }
     
     function iso8601($time=false) {
@@ -693,6 +688,8 @@ class WPCustomerReviews
 		
 		$the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer also */
 		
+		$the_content = preg_replace('/\n\r|\r\n|\n|\r|\t|\s{2}/', '', $the_content); /* minify to prevent automatic line breaks */
+		
 		return $original_content.$the_content;
     }
 	
@@ -704,17 +701,7 @@ class WPCustomerReviews
         $out .= '<div class="sp_rating">';
 
         if ($enable_hover) {
-            $out .= '
-            <div class="status">
-                <div class="score">
-                    <a class="score1">1</a>
-                    <a class="score2">2</a>
-                    <a class="score3">3</a>
-                    <a class="score4">4</a>
-                    <a class="score5">5</a>
-                </div>
-            </div>
-            ';
+            $out .= '<div class="status"><div class="score"><a class="score1">1</a><a class="score2">2</a><a class="score3">3</a><a class="score4">4</a><a class="score5">5</a></div></div>';
         }
 
         $out .= '<div class="base"><div class="average" style="width:'.$rating_width.'%"></div></div>';
@@ -936,7 +923,11 @@ class WPCustomerReviews
     function deactivate() {
 		global $WPCustomerReviewsAdmin;
 		$this->include_admin(); /* include admin functions */
-        $WPCustomerReviewsAdmin->notify_activate($this->options['act_email'],2);
+		
+		$this->options['activate'] = 0;
+		update_option('wpcr_options', $this->options);
+		
+        $WPCustomerReviewsAdmin->notify_activate(2);
     }
     
     function js_redirect($url,$cookie = array()) {
@@ -965,7 +956,7 @@ class WPCustomerReviews
     
     function activate() {
         global $wpdb;
-        
+		
         $existing_tbl = $wpdb->get_var("SHOW TABLES LIKE '$this->dbtable'");
         if ( $existing_tbl != $this->dbtable ) {
 			global $WPCustomerReviewsAdmin;

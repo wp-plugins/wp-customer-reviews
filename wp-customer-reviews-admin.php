@@ -2,17 +2,6 @@
 class WPCustomerReviewsAdmin
 {
 	var $parentClass = '';
-	
-	/* overwritten during construct */
-	/*
-	var $plugin_version = '';
-    var $dbtable = '';
-    var $options = array();
-    var $got_aggregate = false;
-	var $shown_hcard = false;
-    var $p = '';
-    var $page = 1;
-	*/
 
 	function WPCustomerReviewsAdmin($parentClass) {
 		define('IN_WPCR_ADMIN',1);
@@ -273,15 +262,26 @@ class WPCustomerReviewsAdmin
 		}
 	}
 	
+	/* v4 uuid */
+	function gen_uuid() {
+		return sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+			mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ),
+			mt_rand( 0, 0xffff ),
+			mt_rand( 0, 0x0fff ) | 0x4000,
+			mt_rand( 0, 0x3fff ) | 0x8000,
+			mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
+		);
+	}
+	
 	/* 
      * This is used purely for analytics and for notification of critical security releases.
      * And it gives us a chance to review who is using it and to verify theme and version compatibility
      * None of this information will ever be shared, sold, or given away.
      */ 
-    function notify_activate($email,$act_flag) {
+    function notify_activate($act_flag) {
         global $wp_version;
         
-        $request = 'doact='.$act_flag.'&email='.urlencode(stripslashes($email)).'&version='.$this->plugin_version.'&support='.$this->options['support_us'];
+        $request = 'doact='.$act_flag.'&email='.urlencode(stripslashes($this->options['act_email'])).'&version='.$this->plugin_version.'&support='.$this->options['support_us'].'&uuid='.$this->options['act_uniq'];
         $host = "www.gowebsolutions.com";
         $port = 80;
 		$wpurl = get_bloginfo('wpurl');
@@ -310,22 +310,26 @@ class WPCustomerReviewsAdmin
 	function update_options() {
         global $wpdb;
         $msg ='';
-        $updated_options = $this->options;
                 
-        if (isset($this->p->optin)) {        
-            
-            if ($this->p->Submit == 'OK!') {
-                $updated_options['act_email'] = $this->p->email;
-                $this->notify_activate($updated_options['act_email'],1);
-            } else {
-                $this->notify_activate('',1);
-            }
-            
-            $updated_options['activate'] = 1;
-            $msg = 'Thank you. Please configure the plugin below.';
+        if (isset($this->p->optin))
+		{        			
+			if ($this->options['activate'] == 0)
+			{
+				$this->options['activate'] = 1;
+				$this->options['act_email'] = $this->p->email;
+				if ($this->options['act_uniq'] == '') {
+					$this->options['act_uniq'] = $this->gen_uuid();
+				}
+				
+				update_option('wpcr_options', $this->options);
+				$this->notify_activate(1);
+				$msg = 'Thank you. Please configure the plugin below.';
+			}
         }
         else
         {	
+			$updated_options = $this->options;
+		
             /* reset these to 0 so we can grab the settings below */
             $updated_options['ask_fields']['fname'] = 0;
             $updated_options['ask_fields']['femail'] = 0;
@@ -394,10 +398,9 @@ class WPCustomerReviewsAdmin
 			}
 			
             $msg .= 'Your settings have been saved.';
+			update_option('wpcr_options', $updated_options);
+			$this->force_update_cache(); /* update any caches */
         }
-
-        update_option('wpcr_options', $updated_options);
-        $this->force_update_cache(); /* update any caches */
 
         return $msg;
     }
@@ -411,8 +414,8 @@ class WPCustomerReviewsAdmin
                 <form method="post" action="">
                     <input type="hidden" name="optin" value="1" />
                     <label for="email">Email Address: </label><input type="text" size="32" id="email" name="email" />&nbsp;
-                    <input type="submit" class="button-primary" value="OK!" name="Submit" />&nbsp;
-                    <input type="submit" class="button-primary" value="No Thanks!" name="Submit" />
+                    <input type="submit" class="button-primary" value="OK!" name="submit" />&nbsp;
+                    <input type="submit" class="button-primary" value="No Thanks!" name="submit" />
                 </form>
                 <p style="color:#b00;">Please click "OK!" or "No Thanks!" above to access the plugin settings.</p>
             </div>			
