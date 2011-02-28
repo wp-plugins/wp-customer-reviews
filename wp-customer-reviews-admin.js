@@ -73,14 +73,38 @@ jQuery(document).ready(function() {
 	});
 });
 
+function wpcr_strip_tags(html){
+ 
+	//PROCESS STRING
+	if(arguments.length < 3) {
+		html=html.replace(/<\/?(?!\!)[^>]*>/gi, '');
+	} else {
+		var allowed = arguments[1];
+		var specified = eval("["+arguments[2]+"]");
+		if(allowed){
+			var regex='</?(?!(' + specified.join('|') + '))\b[^>]*>';
+			html=html.replace(new RegExp(regex, 'gi'), '');
+		} else{
+			var regex='</?(' + specified.join('|') + ')\b[^>]*>';
+			html=html.replace(new RegExp(regex, 'gi'), '');
+		}
+	}
+
+	//CHANGE NAME TO CLEAN JUST BECAUSE 
+	var clean_string = html;
+
+	//RETURN THE CLEAN STRING
+	return clean_string;
+}
+
 function wpcr_nl2br(str)
 {
-	return str.replace(/(\r|\n|\r\n)/g, "<br />");
+	return str.replace(/(\r|\n|\r\n)/ig, "<br />");
 }
 
 function wpcr_br2nl(str)
 {
-	return str.replace(/(<br \/>|<br>|<br >|<br\/>|<p>)/g, "\r\n");
+	return str.replace(/(<br \/>|<br>|<br >|<br\/>|<p>)/ig, "\r\n");
 }
 
 function callback_review_text(me) {
@@ -423,12 +447,11 @@ BestInPlaceEditor.prototype = {
   // Trim and Strips HTML from text
   sanitizeValue : function(s) {
     if (this.sanitize)
-    {
-      var tmp = document.createElement("DIV");
-      tmp.innerHTML = wpcr_br2nl(s);
-      s = tmp.textContent || tmp.innerText;
+    {	
+	  var news = wpcr_br2nl(s);
+	  return jQuery.trim(wpcr_strip_tags(s));
     }
-   return jQuery.trim(s);
+    return jQuery.trim(s);
   },
 
   /* Generate the data sent in the POST request */
@@ -560,10 +583,11 @@ BestInPlaceEditor.forms = {
       // grab width and height of text
       width = this.element.css('width');
       height = this.element.css('height');
-
+	  
       // construct the form
-      var output = '<form action="javascript:void(0)" style="display:inline;"><textarea>';
-      output += this.sanitizeValue(this.oldValue);
+      var output = '<form action="javascript:void(0)" style="display:inline;"><textarea style="white-space:pre;" wrap="off">';
+      //output += this.sanitizeValue(this.oldValue); /* fix for IE 8 issues */
+	  output += wpcr_br2nl(this.oldValue); /* fix for IE 8 issues */
       output += '</textarea></form>';
       this.element.html(output);
 
@@ -577,7 +601,10 @@ BestInPlaceEditor.forms = {
     },
 
     getValue :  function() {
-      return this.sanitizeValue(this.element.find("textarea").val());
+	  //var sanval = this.sanitizeValue(this.element.find("textarea").val());
+	  var sanval = this.sanitizeValue(this.element.find("textarea").val());
+	  sanval = wpcr_nl2br(sanval);
+      return sanval;
     },
 
     blurHandler : function(event) {
@@ -642,7 +669,7 @@ jQuery.fn.best_in_place = function() {
 				}
 
 				var $textarea	=	jQuery(this),
-					$twin		=	jQuery('<div />').css({'position': 'absolute','display':'none','word-wrap':'break-word'}),
+					$twin		=	jQuery('<div />').css({'position': 'absolute','display':'none','word-wrap':'pre'}),
 					lineHeight	=	parseInt($textarea.css('line-height'),10) || parseInt($textarea.css('font-size'),'10'),
 					minheight	=	parseInt($textarea.css('height'),10) || lineHeight*3,
 					maxheight	=	parseInt($textarea.css('max-height'),10) || Number.MAX_VALUE,

@@ -688,7 +688,8 @@ class WPCustomerReviewsAdmin
                                         exit(); 
                                     }
 									
-									$val = str_replace( array("<br />","<br/>","<br>") , "" , $val ); /* remove extra breaks, these should be newlines */	
+									/* for storing in DB - fix with IE 8 workaround */
+									$val = str_replace( array("<br />","<br/>","<br>") , "\n" , $val );	
 									
 									if (substr($col,0,7) == 'custom_') /* updating custom fields */
 									{
