@@ -75,12 +75,12 @@ jQuery(document).ready(function() {
 
 function wpcr_nl2br(str)
 {
-	return str.replace(/(\r\n|\r|\n)/g, "<br />");
+	return str.replace(/(\r|\n|\r\n)/g, "<br />");
 }
 
 function wpcr_br2nl(str)
 {
-	return str.replace(/(<br \/>|<br>|<br >|<br\/>)/g, "\r\n");
+	return str.replace(/(<br \/>|<br>|<br >|<br\/>|<p>)/g, "\r\n");
 }
 
 function callback_review_text(me) {

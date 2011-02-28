@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.0.5
+ * Version:       2.0.6
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.0.5';
+    var $plugin_version = '2.0.6';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -868,13 +868,17 @@ class WPCustomerReviews
             }
         }
         
-        if (!preg_match('/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/', $this->p->femail)) {
-            $errors .= 'The email address provided is not valid.<br />';
-        }
+		if ($this->options['ask_fields']['femail'] == 1) {
+			if (!preg_match('/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/', $this->p->femail)) {
+				$errors .= 'The email address provided is not valid.<br />';
+			}
+		}
         
-        if (!preg_match('/^\S+:\/\/\S+\.\S+.+$/', $this->p->fwebsite)) {
-            $errors .= 'The website provided is not valid. Be sure to include http://<br />';
-        }
+		if ($this->options['ask_fields']['fwebsite'] == 1) {
+			if (!preg_match('/^\S+:\/\/\S+\.\S+.+$/', $this->p->fwebsite)) {
+				$errors .= 'The website provided is not valid. Be sure to include http://<br />';
+			}
+		}
         
         if (intval($this->p->fconfirm1) == 1 || intval($this->p->fconfirm3) == 1) {
             $errors .= 'You have triggered our anti-spam system. Please try again. Code 001.<br />';
