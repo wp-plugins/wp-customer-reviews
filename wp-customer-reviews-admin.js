@@ -585,7 +585,7 @@ BestInPlaceEditor.forms = {
       height = this.element.css('height');
 	  
       // construct the form
-      var output = '<form action="javascript:void(0)" style="display:inline;"><textarea style="white-space:pre;" wrap="off">';
+      var output = '<form action="javascript:void(0)" style="display:inline;"><textarea>';
       //output += this.sanitizeValue(this.oldValue); /* fix for IE 8 issues */
 	  output += wpcr_br2nl(this.oldValue); /* fix for IE 8 issues */
       output += '</textarea></form>';
@@ -669,7 +669,7 @@ jQuery.fn.best_in_place = function() {
 				}
 
 				var $textarea	=	jQuery(this),
-					$twin		=	jQuery('<div />').css({'position': 'absolute','display':'none','word-wrap':'pre'}),
+					$twin		=	jQuery('<div />').css({'position': 'absolute','display':'none'}),
 					lineHeight	=	parseInt($textarea.css('line-height'),10) || parseInt($textarea.css('font-size'),'10'),
 					minheight	=	parseInt($textarea.css('height'),10) || lineHeight*3,
 					maxheight	=	parseInt($textarea.css('max-height'),10) || Number.MAX_VALUE,
