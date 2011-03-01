@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.0.8
+ * Version:       2.0.9
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.0.8';
+    var $plugin_version = '2.0.9';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -45,7 +45,7 @@ class WPCustomerReviews
 		add_action('the_content', array(&$this, 'do_the_content'), 10); /* 10 prevents a conflict with some odd themes */
         add_action('init', array(&$this, 'init'));
         add_action('admin_init', array(&$this, 'admin_init'));
-        add_action('get_header', array(&$this, 'enqueue_stuff')); /* need to enqueue before wp_head gets called */
+		add_action('wp_print_scripts', array(&$this, 'enqueue_scripts'), 11); /* try enqueueing scripts here */
 		
 		add_filter('plugin_action_links_'.plugin_basename(__FILE__), array(&$this,'plugin_settings_link') );
 		add_action('admin_menu', array(&$this,'addmenu') );
@@ -223,21 +223,21 @@ class WPCustomerReviews
         
         return false;
     }
-	    
-    function enqueue_stuff() {
-        global $post;
-        
+	
+	function enqueue_scripts() {
+		global $post;
+		
 		$is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
 		if ($is_active_page)
-		{ 
-            wp_enqueue_script('jquery');
+		{
+			wp_enqueue_script('jquery');
             wp_register_script('wp-customer-reviews',$this->getpluginurl().'wp-customer-reviews.js',array(),$this->plugin_version);
             wp_enqueue_script('wp-customer-reviews');
-                  
-            /* do this here so we can redirect */
+			
+			/* do this here so we can redirect cleanly */
 			$GET_P = "submitwpcr_$post->ID";
 							
-			if ($this->p->$GET_P == $this->options['submit_button_text']) {
+			if (isset($this->p->$GET_P) && $this->p->$GET_P == $this->options['submit_button_text']) {
 				$msg = $this->add_review($post->ID);
 
 				$has_error = $msg[0];
@@ -258,12 +258,16 @@ class WPCustomerReviews
 				
 				exit();
 			}
-        }
-        
-        /* styles needed for hidden hcard so we just include them everywhere */
-        wp_register_style('wp-customer-reviews',$this->getpluginurl().'wp-customer-reviews.css',array(),$this->plugin_version);        
-        wp_enqueue_style('wp-customer-reviews');
-    }
+		}
+	}
+	
+	function enqueue_styles() {
+		global $post;
+		
+		/* styles needed for hidden hcard so we just include them everywhere */
+		wp_register_style('wp-customer-reviews',$this->getpluginurl().'wp-customer-reviews.css',array(),$this->plugin_version);        
+		wp_enqueue_style('wp-customer-reviews');
+	}
     
     function rand_string( $length ) {
 		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";	
@@ -449,9 +453,6 @@ class WPCustomerReviews
 			$the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer then */
 			return $original_content.$the_content;
 		}
-		
-		/* may need to uncomment to validate */
-		/* remove_filter ('the_content', 'wpautop'); */
         
         $status_msg = '';
 		$status_css = '';
@@ -957,6 +958,10 @@ class WPCustomerReviews
 		
 		$this->page = intval($this->p->wpcrp);
         if ($this->page < 1) { $this->page = 1; }
+		
+		/* styles needed for hidden hcard so we just include them everywhere */
+		wp_register_style('wp-customer-reviews',$this->getpluginurl().'wp-customer-reviews.css',array(),$this->plugin_version);        
+		wp_enqueue_style('wp-customer-reviews');
     }
     
     function activate() {
