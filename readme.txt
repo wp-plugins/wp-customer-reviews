@@ -52,6 +52,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.1.2 () =
+* [Cleanup] Updated some activation/deactivation hooks.
+
 = 2.1.1 (03-01-2011) =
 * [Fix] Updated "thank you" message to try to prevent wordpress escaping quotes.
 

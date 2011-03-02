@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.1.1
+ * Version:       2.1.2
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.1.1';
+    var $plugin_version = '2.1.2';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -173,14 +173,15 @@ class WPCustomerReviews
         $migrated = false;
         
         /* remove me after official release */
-        $this->options['dbversion'] = intval(str_replace('.','',$this->options['dbversion']));
+        $current_dbversion = intval(str_replace('.','',$this->options['dbversion']));
         $plugin_db_version = intval(str_replace('.','',$this->plugin_version));
         
-        if ($this->options['dbversion'] == $plugin_db_version) { return false; }
+        if ($current_dbversion == $plugin_db_version) { return false; }
         
         /* initial installation */
-        if ($this->options['dbversion'] == 0) { 
+        if ($current_dbversion == 0) { 
             $this->options['dbversion'] = $plugin_db_version;
+			$current_dbversion = $plugin_db_version;
             update_option('wpcr_options', $this->options);
             return false;
         }
@@ -188,8 +189,8 @@ class WPCustomerReviews
         /* check for upgrades if needed */
         
         /* upgrade to 2.0.0 */
-        if ($this->options['dbversion'] < 200) {
-			
+        if ($current_dbversion < 200)
+		{
 			/* add multiple page support to database */
 			/* using one query per field to prevent errors if a field already exists */
             $wpdb->query("ALTER TABLE `$this->dbtable` ADD `page_id` INT(11) NOT NULL DEFAULT '0', ADD INDEX ( `page_id` )");
@@ -203,14 +204,16 @@ class WPCustomerReviews
 			update_post_meta($pageID, 'wpcr_enable', 1);
 			
             $this->options['dbversion'] = 200;
+			$current_dbversion = 200;
             update_option('wpcr_options', $this->options);
             $migrated = true;
         }
         
         /* done with all migrations, push dbversion to current version */
-        if ($this->options['dbversion'] != $plugin_db_version || $migrated == true) {
-            
+        if ($current_dbversion != $plugin_db_version || $migrated == true)
+		{ 
 			$this->options['dbversion'] = $plugin_db_version;
+			$current_dbversion = $plugin_db_version;
             update_option('wpcr_options', $this->options);
 			
 			global $WPCustomerReviewsAdmin;
@@ -925,8 +928,9 @@ class WPCustomerReviews
         return array(false,'<div>Thank you for your comments. All submissions are moderated and if approved, yours will appear soon.</div>');
     }
     
-    function deactivate() {		
-		if ($this->p->action != 'upgrade-plugin')
+    function deactivate() {	
+		/* do not fire on upgrading plugin or upgrading WP - only on true manual deactivation */
+		if ($this->p->action == 'deactivate')
 		{
 			$this->options['activate'] = 0;
 			update_option('wpcr_options', $this->options);
