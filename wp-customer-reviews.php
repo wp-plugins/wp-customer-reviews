@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.1.0
+ * Version:       2.1.1
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.1.0';
+    var $plugin_version = '2.1.1';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -454,15 +454,15 @@ class WPCustomerReviews
 			return $original_content.$the_content;
 		}
         
+		$script_block = '';
         $status_msg = '';
-		$status_css = '';
         if ( isset( $_COOKIE['wpcr_status_msg'] ) ) {
             $status_msg = $_COOKIE['wpcr_status_msg'];
-            $status_msg .= "\n<script type='text/javascript'>wpcr_del_cookie('wpcr_status_msg');</script>\n";
-			$status_css = 'padding-bottom:15px;';
+            $script_block = '<script type="text/javascript">wpcr_del_cookie("wpcr_status_msg");</script>';
         }
-                
-        $the_content .= '<div id="wpcr_respond_1"><div style="'.$status_css.'" class="wpcr_status_msg">'.$status_msg.'</div>'; /* show errors or thank you message here */
+        
+		echo $script_block; /* to prevent filtering , we just echo it */
+        $the_content .= '<div id="wpcr_respond_1"><div class="wpcr_status_msg">'.$status_msg.'</div>'; /* show errors or thank you message here */
         $the_content .= '<p><a id="wpcr_button_1" href="javascript:void(0);">'.$this->options['goto_leave_text'].'</a></p><hr />';
 		
         $arr_Reviews = $this->get_reviews($post->ID,$this->page,$this->options['reviews_per_page'],1);
@@ -898,7 +898,7 @@ class WPCustomerReviews
         }
         
         /* returns true for errors */
-        if ($errors) { return array(true,"<div class='wpcr_status_msg'>$errors</div>"); }
+        if ($errors) { return array(true,"<div>$errors</div>"); }
         /* end - server-side validation */
 		
 		$custom_insert = array();
@@ -922,7 +922,7 @@ class WPCustomerReviews
         @wp_mail( get_bloginfo('admin_email'), "WP Customer Reviews: New Review Posted on ".date('m/d/Y h:i'), "A new review has been posted for ".$this->options['business_name']." via WP Customer Reviews. \n\nYou will need to login to the admin area and approve this review before it will appear on your site.");
         
         /* returns false for no error */
-        return array(false,'<div style="color:#c00;font-weight:bold;padding-bottom:15px;padding-top:15px;">Thank you for your comments. All submissions are moderated and if approved, yours will appear soon.</div>');
+        return array(false,'<div>Thank you for your comments. All submissions are moderated and if approved, yours will appear soon.</div>');
     }
     
     function deactivate() {		

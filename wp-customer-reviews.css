@@ -15,6 +15,7 @@
 .wpcr_pb5 { padding-bottom:5px; }
 .wpcr_power { padding-top:30px !important; padding-bottom:5px !important; font-size:10px !important; }
 .wpcr_status_msg { color:#c00;font-weight:bold; }
+.wpcr_status_msg div { color:#c00;font-weight:bold;padding-bottom:15px;padding-top:15px; }
 
 /* title of review */
 #wpcr_respond_1 h2.summary { padding: 5px 0 5px 0; }

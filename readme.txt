@@ -4,7 +4,7 @@ Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget, hproduct, product, snippet, snippets
 Requires at least: 3.0
 Tested up to: 3.1
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -52,6 +52,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.1.1 (03-01-2011) =
+* [Fix] Updated "thank you" message to try to prevent wordpress escaping quotes.
+
 = 2.1.0 (03-01-2011) =
 * [Fix] Quick fix to correctly clear "thank you" message upon future visits to the reviews page.
 
@@ -85,17 +88,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 = 2.0.1 (02-26-2011) =
 * [Fix] 2.0.0 had introduced a blocking error in plugin activation.
 
-= 2.0.0 (02-26-2011) =
-* [New] Added support for custom fields.
-* [New] Now supports using the plugin on more than one page.
-* [New] Now supports both "Business" and "Product" hReview formats.
-* [New] The plugin is now even faster since administrative functions are only included as needed.
-* [Update] Better format of the aggregate review format. This will make review pages ouput with a considerably smaller size.
-* [Update] Some better methods of validation in the administrative area. This automatically prevents you from choosing combinations that do not make any sense (ask/require/show fields).
-* [Update] The plugin has been almost completely rewritten for the inclusion of the new features and for better performance. It was incredibly quick before, and now it is even faster.
-* [Fix] Numerous bug fixes. Too many to mention. Many were very minor and probably would never have been an issue, but you can't be too safe.
-
 == Upgrade Notice ==
 
-= 2.0.9 =
+= 2.1.1 =
 Fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
