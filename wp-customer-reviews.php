@@ -231,7 +231,7 @@ class WPCustomerReviews
 		global $post;
 		
 		$is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
-		if ($is_active_page)
+		if ($is_active_page && is_singular()) /* make sure its a single page/post and not a list of posts */
 		{
 			wp_enqueue_script('jquery');
             wp_register_script('wp-customer-reviews',$this->getpluginurl().'wp-customer-reviews.js',array(),$this->plugin_version);
@@ -248,6 +248,7 @@ class WPCustomerReviews
 				$cookie = array('wpcr_status_msg' => $status_msg);
 				
 				$url = get_permalink($post->ID);
+				$url .= '#wpcr_respond_1'; /* jump to status message */
 				
 				if (headers_sent() == true) {
 					echo $this->js_redirect($url,$cookie); /* use JS redirect and add cookie before redirect */
@@ -359,7 +360,7 @@ class WPCustomerReviews
 			
             if ($this->options['show_hcard_on'] == 1) { $show = true; }
             else if ($this->options['show_hcard_on'] == 2 && ( is_home() || is_front_page() ) ) { $show = true; }
-            else if ($this->options['show_hcard_on'] == 3 && $is_active_page ) { $show = true; }
+            else if ($this->options['show_hcard_on'] == 3 && $is_active_page && is_singular() ) { $show = true; } /* show only on a single page with is_singular() */
             /* end - make sure we should continue */
 
             if ($show) { /* we append like this to prevent newlines and wpautop issues */
@@ -452,7 +453,9 @@ class WPCustomerReviews
 		$the_content = '';
 		
 		$is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
-		if (!$is_active_page) { 
+		/* return normal content if this is not an enabled page, or if this is a post not on single post view */
+		if (!$is_active_page || !is_singular())
+		{ 
 			$the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer then */
 			return $original_content.$the_content;
 		}
@@ -872,7 +875,8 @@ class WPCustomerReviews
             }
         }
         
-		if ($this->options['ask_fields']['femail'] == 1) {
+		/* only do regex matching if not blank */
+		if ($this->p->femail != '' && $this->options['ask_fields']['femail'] == 1) {
 			if (!preg_match('/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/', $this->p->femail)) {
 				$errors .= 'The email address provided is not valid.<br />';
 			}

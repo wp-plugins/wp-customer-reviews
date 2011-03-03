@@ -101,7 +101,9 @@ class WPCustomerReviewsAdmin
 			)
 		);
 		
-		add_meta_box($meta_box['id'], $meta_box['title'], array(&$this, 'wpcr_show_meta_box'), $meta_box['page'], $meta_box['context'], $meta_box['priority']);
+		/* add for pages and posts */
+		add_meta_box($meta_box['id'], $meta_box['title'], array(&$this, 'wpcr_show_meta_box'), 'page', $meta_box['context'], $meta_box['priority']);
+		add_meta_box($meta_box['id'], $meta_box['title'], array(&$this, 'wpcr_show_meta_box'), 'post', $meta_box['context'], $meta_box['priority']);
 	}
 	
 	function real_admin_save_post($post_id)
@@ -137,13 +139,15 @@ class WPCustomerReviewsAdmin
 				delete_post_meta($post_id, $field['id'], $old);
 			}
 			
+			/* disable comments, trackbacks on the selected WPCR page or post */
+			/*
 			if ($field['id'] == 'wpcr_enable' && $new == '1') {
-				/* disable comments, trackbacks on the selected WPCR page */
 				$post->comment_status = 'closed';
 				$post->ping_status = 'closed';
 				$query = "UPDATE {$wpdb->prefix}posts SET comment_status = 'closed', ping_status = 'closed' WHERE ID = {$post_id}";
 				$wpdb->query($query);
 			}
+			*/
 		}
 		
 		return $post_id;
