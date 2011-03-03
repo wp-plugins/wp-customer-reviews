@@ -52,6 +52,12 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.1.4 (03-03-2011) =
+* [Fix] Updated the method used to jump to form/status message.
+* [Fix] Updated the method used to submit form.
+* [Fix] Some general Javascript cleanups
+* [Fix] Website URL validation was being performed on an empty non-required URL.
+
 = 2.1.3 (03-03-2011) =
 * [New] An option has been added to show the review form above/below reviews.
 

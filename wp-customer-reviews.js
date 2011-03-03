@@ -15,6 +15,12 @@ function wpcr_del_cookie(name) {
     document.cookie = name + '=; expires=Thu, 01-Jan-70 00:00:01 GMT;';
 }
 
+function wpcr_jump_to() {
+	jQuery(document).ready(function(){
+		window.location.hash="wpcr_respond_1";
+	});
+}
+
 function valwpcrform_2(newid,oldid,err) {  
     
     var myval = '';
@@ -90,7 +96,8 @@ function valwpcrform(me) {
     }
 
 	var f = jQuery("#wpcr_commentform");
-	f.attr("action","").removeAttr("onsubmit");
+	var newact = jQuery(location).attr('pathname');
+	f.attr("action",newact).removeAttr("onsubmit");
     return true;
 }
 

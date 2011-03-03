@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.1.3
+ * Version:       2.1.4
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.1.3';
+    var $plugin_version = '2.1.4';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -249,7 +249,6 @@ class WPCustomerReviews
 				$cookie = array('wpcr_status_msg' => $status_msg);
 				
 				$url = get_permalink($post->ID);
-				$url .= '#wpcr_respond_1'; /* jump to status message */
 				
 				if (headers_sent() == true) {
 					echo $this->js_redirect($url,$cookie); /* use JS redirect and add cookie before redirect */
@@ -461,15 +460,6 @@ class WPCustomerReviews
 			$the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer then */
 			return $original_content.$the_content;
 		}
-        
-		$script_block = '';
-        $status_msg = '';
-        if ( isset( $_COOKIE['wpcr_status_msg'] ) ) {
-            $status_msg = $_COOKIE['wpcr_status_msg'];
-            $script_block = '<script type="text/javascript">wpcr_del_cookie("wpcr_status_msg");</script>';
-        }
-        
-		echo $script_block; /* to prevent filtering , we just echo it */
 		
         $arr_Reviews = $this->get_reviews($post->ID,$this->page,$this->options['reviews_per_page'],1);
         
@@ -731,6 +721,15 @@ class WPCustomerReviews
         global $post, $current_user;
                
         $fields = '';
+		
+		$script_block = '';
+        $status_msg = '';
+        if ( isset( $_COOKIE['wpcr_status_msg'] ) ) {
+            $status_msg = $_COOKIE['wpcr_status_msg'];
+            $script_block = '<script type="text/javascript">wpcr_del_cookie("wpcr_status_msg");wpcr_jump_to();</script>';
+        }
+        
+		echo $script_block; /* to prevent filtering , we just echo it */
         
         /* a silly yet crazy and possibly effective antispam measure.. bots won't have a clue */
         $rand_prefixes = array();
@@ -898,7 +897,8 @@ class WPCustomerReviews
 			}
 		}
         
-		if ($this->options['ask_fields']['fwebsite'] == 1) {
+		/* only do regex matching if not blank */
+		if ($this->p->fwebsite != '' && $this->options['ask_fields']['fwebsite'] == 1) {
 			if (!preg_match('/^\S+:\/\/\S+\.\S+.+$/', $this->p->fwebsite)) {
 				$errors .= 'The website provided is not valid. Be sure to include http://<br />';
 			}
@@ -962,16 +962,16 @@ class WPCustomerReviews
     
     function js_redirect($url,$cookie = array()) {
 		/* we do not html comment script blocks here - to prevent any issues with other plugins adding content to newlines, etc */
-        $out = "<div style='clear:both;text-align:center;padding:10px;'>
-		Processing... Please wait...
-		<script type='text/javascript'>";
+        $out = "<body><div style='clear:both;text-align:center;padding:10px;'>".
+		"Processing... Please wait...".
+		"<script type='text/javascript'>";
 	    foreach ($cookie as $col => $val) {
 			$val = preg_replace("/\r?\n/", "\\n", addslashes($val));
-			$out .= "document.cookie=\"$col=$val\";\n";
+			$out .= "document.cookie=\"$col=$val\";";
 	    }
-		$out .= "window.location='$url';\n";
-		$out .= "</script>\n";
-		$out .= "</div>";
+		$out .= "window.location='$url';";
+		$out .= "</script>";
+		$out .= "</div></body></html>";
 		return $out;
     }
     	
