@@ -92,10 +92,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * [Fix] Some CSS button workarounds for more themes.
 * [Fix] Some validation has been relaxed to prevent a possible bug.
 
-= 2.0.1 (02-26-2011) =
-* [Fix] 2.0.0 had introduced a blocking error in plugin activation.
-
 == Upgrade Notice ==
 
-= 2.1.1 =
+= 2.1.2 =
 Fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
