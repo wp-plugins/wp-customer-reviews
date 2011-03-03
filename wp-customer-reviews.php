@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.1.2
+ * Version:       2.1.3
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.1.2';
+    var $plugin_version = '2.1.3';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -112,6 +112,7 @@ class WPCustomerReviews
             'business_zip' => '',
             'dbversion' => 0,
 			'field_custom' => array(),
+			'form_location' => 0,
             'goto_leave_text' => 'Click here to submit your review.',
 			'hreview_type' => 'business',
             'leave_text' => 'Submit your review',
@@ -404,7 +405,7 @@ class WPCustomerReviews
              $url = '?';
              if (is_admin()) { $url .= 'page=wpcr_view_reviews&amp;review_status='.$this->p->review_status.'&amp;'; }
              
-             $out .= "<div id='wpcr_pagination'><div id='wpcr_pagination_page'>Page: </div>";
+             $out .= '<div id="wpcr_pagination"><div id="wpcr_pagination_page">Page: </div>';
 
              if($paged > 2 && $paged > $range + 1 && $showitems < $pages)
              {
@@ -413,16 +414,16 @@ class WPCustomerReviews
                 } else {
                     $url2 = get_permalink($post->ID);
                 }
-                $out .= "<a href='{$url2}'>&laquo;</a>"; 
+                $out .= '<a href="'.$url2.'">&laquo;</a>'; 
              }
              
-             if($paged > 1 && $showitems < $pages) { $out .= "<a href='{$url}wpcrp=".($paged - 1)."'>&lsaquo;</a>"; }
+             if($paged > 1 && $showitems < $pages) { $out .= '<a href="'.$url.'wpcrp='.($paged - 1).'">&lsaquo;</a>'; }
 
              for ($i=1; $i <= $pages; $i++)
              {
                 if ($i == $paged)
                 {
-                    $out .= "<span class='wpcr_current'>$paged</span>";
+                    $out .= '<span class="wpcr_current">'.$paged.'</span>';
                 }
                 else if ( !($i >= $paged + $range + 1 || $i <= $paged - $range - 1) || $pages <= $showitems )
                 {
@@ -432,16 +433,17 @@ class WPCustomerReviews
                         } else {
                             $url2 = get_permalink($post->ID);
                         }
-                        $out .= "<a href='{$url2}' class='wpcr_inactive' >".$i."</a>";
+                        $out .= '<a href="'.$url2.'" class="wpcr_inactive">'.$i.'</a>';
                     } else {
-                        $out .= "<a href='{$url}wpcrp=$i' class='wpcr_inactive' >".$i."</a>";
+                        $out .= '<a href="'.$url.'wpcrp='.$i.'" class="wpcr_inactive">'.$i.'</a>';
                     }
                 }
              }
 
-             if ($paged < $pages && $showitems < $pages) { $out .= "<a href='{$url}wpcrp=".($paged + 1)."'>&rsaquo;</a>"; }
-             if ($paged < $pages-1 &&  $paged+$range-1 < $pages && $showitems < $pages) { $out .= "<a href='{$url}wpcrp=$pages'>&raquo;</a>"; }
-             $out .= "</div>\n";
+             if ($paged < $pages && $showitems < $pages) { $out .= '<a href="'.$url.'wpcrp='.($paged + 1).'">&rsaquo;</a>'; }
+             if ($paged < $pages-1 &&  $paged+$range-1 < $pages && $showitems < $pages) { $out .= '<a href="'.$url.'wpcrp='.$pages.'">&raquo;</a>'; }
+             $out .= '</div>';
+			 $out .= '<div class="wpcr_clear wpcr_pb5"></div>';
 
              return $out;
          }
@@ -468,8 +470,6 @@ class WPCustomerReviews
         }
         
 		echo $script_block; /* to prevent filtering , we just echo it */
-        $the_content .= '<div id="wpcr_respond_1"><div class="wpcr_status_msg">'.$status_msg.'</div>'; /* show errors or thank you message here */
-        $the_content .= '<p><a id="wpcr_button_1" href="javascript:void(0);">'.$this->options['goto_leave_text'].'</a></p><hr />';
 		
         $arr_Reviews = $this->get_reviews($post->ID,$this->page,$this->options['reviews_per_page'],1);
         
@@ -685,9 +685,19 @@ class WPCustomerReviews
 			}
         }
         
-		$the_content .= $this->show_reviews_form($status_msg);
+		if ($this->options['form_location'] == 0)
+		{
+			$the_content .= $this->show_reviews_form();
+		}
+		
         $the_content .= $reviews_content;
         $the_content .= $this->pagination($total_reviews);
+		
+		if ($this->options['form_location'] == 1)
+		{
+			$the_content .= $this->show_reviews_form();
+		}
+		
         if ($this->options['support_us'] == 1) {
             $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
         }
@@ -775,10 +785,17 @@ class WPCustomerReviews
                 $some_required = '<small>* Required Field</small>';
             }
         }
-        $req_js .= "</script>\n";  
+        $req_js .= "</script>\n";
+
+		$out = '';
+		
+		$button_html = '<div id="wpcr_respond_1"><div class="wpcr_status_msg">'.$status_msg.'</div>'; /* show errors or thank you message here */
+		$button_html .= '<p><a id="wpcr_button_1" href="javascript:void(0);">'.$this->options['goto_leave_text'].'</a></p>';
+		
+		$out .= $button_html.'<hr />';
 
         /* different output variables make it easier to debug this section */
-        $out = '<div id="wpcr_respond_2">'.$req_js.'
+        $out .= '<div id="wpcr_respond_2">'.$req_js.'
                     <form class="wpcrcform" id="wpcr_commentform" method="post" action="javascript:void(0);">
                         <div id="wpcr_div_2">
                             <input type="hidden" id="frating" name="frating" />
@@ -812,9 +829,8 @@ class WPCustomerReviews
                         </div>
                     </form>';
 
-        $out4 = '<hr />
-                </div>
-                <div class="wpcr_clear wpcr_pb5"></div>';
+        $out4 = '<hr /></div>';
+		$out4 .= '<div class="wpcr_clear wpcr_pb5"></div>';
             
         return $out.$out2.$out3.$out4;
     }

@@ -385,6 +385,7 @@ class WPCustomerReviewsAdmin
             $updated_options['reviews_per_page'] = intval($this->p->reviews_per_page);
             $updated_options['show_hcard_on'] = intval($this->p->show_hcard_on);
             $updated_options['support_us'] = intval($this->p->support_us);
+			$updated_options['form_location'] = intval($this->p->form_location);
             if ($updated_options['reviews_per_page'] < 1) { $updated_options['reviews_per_page'] = 10; }
 
             if ($updated_options['show_hcard_on']) {
@@ -514,6 +515,12 @@ class WPCustomerReviewsAdmin
 						<br /><br />
                         <label for="reviews_per_page">Reviews shown per page: </label><input style="width:40px;" type="text" id="reviews_per_page" name="reviews_per_page" value="'.$this->options['reviews_per_page'].'" />
                         <br /><br />
+						<label for="form_location">Location of Review Form: </label>
+                        <select id="form_location" name="form_location">
+                                <option ';if ($this->options['form_location'] == 0) { echo "selected"; } echo ' value="0">Above Reviews</option>
+                                <option ';if ($this->options['form_location'] == 1) { echo "selected"; } echo ' value="1">Below Reviews</option>
+                        </select>
+						<br /><br />
                         <label>Fields to ask for on review form: </label>
                         <input data-what="fname" id="ask_fname" name="ask_fields[]" type="checkbox" '.$af['fname'].' value="fname" />&nbsp;<label for="ask_fname"><small>Name</small></label>&nbsp;&nbsp;&nbsp;
                         <input data-what="femail" id="ask_femail" name="ask_fields[]" type="checkbox" '.$af['femail'].' value="femail" />&nbsp;<label for="ask_femail"><small>Email</small></label>&nbsp;&nbsp;&nbsp;
