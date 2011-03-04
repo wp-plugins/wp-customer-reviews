@@ -93,14 +93,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 = 2.0.5 (02-28-2011) =
 * [Fix] 2.0.3 had prevented some form validation from triggering.
 
-= 2.0.4 (02-28-2011) =
-* [Update] Plugin upgrade was failing for some blogs. This has been fixed.
-
-= 2.0.3 (02-28-2011) =
-* [Fix] Additional minification was added to prevent automatic WordPress linebreaks from occuring within the plugin output.
-* [Update] Plugin activation was failing for some blogs. This has been fixed.
-
 == Upgrade Notice ==
 
-= 2.1.2 =
+= 2.1.5 =
 Fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
