@@ -91,7 +91,7 @@ function valwpcrform(me) {
     if (err.length) {
         var err2 = err.join("\n");
         alert(err2);
-        jQuery("#wpcr_table_2").find(":text:first").focus();
+        jQuery("#wpcr_table_2").find("input:text:visible:first").focus();
         return false;
     }
 
@@ -120,7 +120,7 @@ function wpcr_showform() {
     } else {
         jQuery("#wpcr_button_1").html(wpcr_old_btn_val);
     }
-    jQuery("#wpcr_table_2").find(":text").first().focus();
+    jQuery("#wpcr_table_2").find("input:text:visible:first").focus();
 }
 
 jQuery(document).ready(function(){
