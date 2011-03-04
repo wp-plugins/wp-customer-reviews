@@ -96,7 +96,7 @@ function valwpcrform(me) {
     }
 
 	var f = jQuery("#wpcr_commentform");
-	var newact = jQuery(location).attr('pathname');
+	var newact = jQuery(location).attr('pathname') + jQuery(location).attr('search');
 	f.attr("action",newact).removeAttr("onsubmit");
     return true;
 }
