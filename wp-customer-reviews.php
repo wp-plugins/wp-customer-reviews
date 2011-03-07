@@ -1,7 +1,7 @@
 <?php
 /* 
  * Plugin Name:   WP Customer Reviews
- * Version:       2.1.6
+ * Version:       2.1.7
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
  * Author:        Go Web Solutions
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.1.6';
+    var $plugin_version = '2.1.7';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -388,9 +388,13 @@ class WPCustomerReviews
         return (substr($date, 0, strlen($date)-2).':'.substr($date, -2));
     }
 	
-    function pagination($total_results = 0, $range = 2) {
-
+    function pagination($total_results = 0, $range = 2)
+	{
+		 global $post; /* will exist if on a post */
+	
          $out = '';
+		 $uri = false;
+		 $pretty = false;
 
          $showitems = ($range * 2) + 1;
 
@@ -401,18 +405,20 @@ class WPCustomerReviews
 
          if($pages > 1)
          {
-             $url = '?';
-             if (is_admin()) { $url .= 'page=wpcr_view_reviews&amp;review_status='.$this->p->review_status.'&amp;'; }
-             
+             if (is_admin()) { $url = '?page=wpcr_view_reviews&amp;review_status='.$this->p->review_status.'&amp;'; }
+             else
+			 {
+				$uri = get_permalink($post->ID);
+				if (strpos($uri,'?') === false) { $url = '?'; $pretty = true; } /* page is using pretty permalinks */
+				else { $url = $uri.'&amp;'; $pretty = false; } /* page is using get variables for pageid */
+			 }
+			 
              $out .= '<div id="wpcr_pagination"><div id="wpcr_pagination_page">Page: </div>';
 
              if($paged > 2 && $paged > $range + 1 && $showitems < $pages)
              {
-                if (is_admin()) {
-                    $url2 = '?page=wpcr_view_reviews&amp;review_status='.$this->p->review_status.'&amp;';
-                } else {
-                    $url2 = get_permalink($post->ID);
-                }
+				if ($uri && $pretty) { $url2 = $uri; } /* not in admin AND using pretty permalinks */
+				else { $url2 = $url; }
                 $out .= '<a href="'.$url2.'">&laquo;</a>'; 
              }
              
@@ -426,14 +432,14 @@ class WPCustomerReviews
                 }
                 else if ( !($i >= $paged + $range + 1 || $i <= $paged - $range - 1) || $pages <= $showitems )
                 {
-                    if ($i == 1) {
-                        if (is_admin()) {
-                            $url2 = '?page=wpcr_view_reviews&amp;review_status='.$this->p->review_status.'&amp;';
-                        } else {
-                            $url2 = get_permalink($post->ID);
-                        }
+                    if ($i == 1)
+					{
+                        if ($uri && $pretty) { $url2 = $uri; } /* not in admin AND using pretty permalinks */
+						else { $url2 = $url; }
                         $out .= '<a href="'.$url2.'" class="wpcr_inactive">'.$i.'</a>';
-                    } else {
+                    } 
+					else
+					{
                         $out .= '<a href="'.$url.'wpcrp='.$i.'" class="wpcr_inactive">'.$i.'</a>';
                     }
                 }
@@ -942,7 +948,11 @@ class WPCustomerReviews
         
         $wpdb->query($query);
         
-        @wp_mail( get_bloginfo('admin_email'), "WP Customer Reviews: New Review Posted on ".date('m/d/Y h:i'), "A new review has been posted for ".$this->options['business_name']." via WP Customer Reviews. \n\nYou will need to login to the admin area and approve this review before it will appear on your site.");
+		$wpurl = get_bloginfo('wpurl');
+		$admin_link = trailingslashit($wpurl).'wp-admin/admin.php?page=wpcr_view_reviews';
+		$admin_link = "Link to admin approval page: $admin_link";
+		
+        @wp_mail( get_bloginfo('admin_email'), "WP Customer Reviews: New Review Posted on ".date('m/d/Y h:i'), "A new review has been posted for ".$this->options['business_name']." via WP Customer Reviews. \n\nYou will need to login to the admin area and approve this review before it will appear on your site.\n\n{$admin_link}");
         
         /* returns false for no error */
         return array(false,'<div>Thank you for your comments. All submissions are moderated and if approved, yours will appear soon.</div>');
