@@ -1,4 +1,4 @@
-var wpcr_old_btn_val = '';
+var wpcr_old_btn_val = 'Click here to hide form';
 var wpcr_req = [];
 
 function wpcr_strpos (haystack, needle, offset) {
@@ -114,11 +114,12 @@ function wpcr_onhover() {
 
 function wpcr_showform() {
     jQuery("#wpcr_respond_2").slideToggle();
-    if (wpcr_old_btn_val != 'Click here to hide form') {
+    if (wpcr_old_btn_val == 'Click here to hide form') {
         wpcr_old_btn_val = jQuery("#wpcr_button_1").html();
         jQuery("#wpcr_button_1").html('Click here to hide form');
     } else {
         jQuery("#wpcr_button_1").html(wpcr_old_btn_val);
+		wpcr_old_btn_val = 'Click here to hide form';
     }
     jQuery("#wpcr_table_2").find("input:text:visible:first").focus();
 }
