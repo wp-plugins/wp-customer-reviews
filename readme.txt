@@ -1,0 +1,101 @@
+=== WP Customer Reviews ===
+Contributors: bompus
+Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
+Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget, hproduct, product, snippet, snippets
+Requires at least: 3.0
+Tested up to: 3.1
+Stable tag: 2.1.8
+
+WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
+
+== Description ==
+
+There are many sites that are crawling for user-generated reviews now, including Google Places and Google Local Search. WP Customer Reviews allows you to setup a specific page on your blog to receive customer testimonials for your business/service OR to write reviews about multiple products (using multiple pages).
+
+* All submissions are moderated, which means that YOU choose which reviews get shown.
+* Reviews are displayed to visitors in a friendly format, but search engines see the hReview microformat (and RDFa soon!)
+* Multiple anti-spam measures to prevent automated spambots from submitting reviews.
+* Provides a configurable `Business hCard`, to help identify all pages of your site as belonging to your business.
+* Completely customizable, including which fields to ask for, require, and show.
+* Works with caching plugins and all themes.
+* Includes an external stylesheet so you can modify it to better fit your theme.
+* Reviews can be edited by admin for content and date.
+* Support for adding your own custom fields with one click.
+* The plugin can be used on more than one page.
+* Supports both `Business` and `Product` hReview types.
+* Shows aggregate reviews microformat (`hReview-aggregate`).
+* Fast and lightweight, even including the star rating image. This plugin will not slow down your blog.
+* Validates as valid XHTML 1.1 (W3C) and valid Microformats (Rich Snippets Testing Tool).
+* And much more...
+
+This is a community-driven , donation-funded plugin. Almost every new feature that has been added was due to the generous support and suggestions of our users. If you have a suggestion or question, do not hesitate to ask in our forum.
+
+More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plugins/wp-customer-reviews/)
+
+== Installation ==
+
+1. Upload contents of compressed file (wp-customer-reviews) to the `/wp-content/plugins/` directory. 
+2. Activate the plugin through the `Plugins` menu in WordPress admin.
+3. Create a WordPress page to be used specifically for gathering reviews or testimonials.
+4. Go into settings for WP Customer Reviews and configure the plugin.
+
+== Screenshots ==
+
+1. Admin Moderation of Comments (v1.2.4)
+2. Admin Options #1 (v1.2.4)
+3. Admin Options #2 (v1.2.4)
+4. Example of what visitors will see (v1.2.4)
+5. A visitor submitting a review (v1.2.4)
+
+== Frequently Asked Questions ==
+* If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
+
+== Changelog ==
+
+= 2.1.8 (03-07-2011) =
+* Show Form/Hide Form button has been fixed to properly display the correct message.
+
+= 2.1.7 (03-07-2011) =
+* [Fix] Pagination has been fixed for blogs that do not use pretty permalinks.
+* [Fix] An additional pagination issue was found and has been fixed.
+* [Update] A link to the admin page will now be included when notifications are sent for new reviews.
+
+= 2.1.6 (03-04-2011) =
+* [Fix] Focusing on the first form element was failing for some instances of jQuery.
+
+= 2.1.5 (03-04-2011) =
+* [Fix] Form submission was not working for non-permalinked pages (including previews).
+
+= 2.1.4 (03-03-2011) =
+* [Fix] Updated the method used to jump to form/status message.
+* [Fix] Updated the method used to submit form.
+* [Fix] Some general Javascript cleanups
+* [Fix] Website URL validation was being performed on an empty non-required URL.
+
+= 2.1.3 (03-03-2011) =
+* [New] An option has been added to show the review form above/below reviews.
+
+= 2.1.2 (03-02-2011) =
+* [Cleanup] Updated some activation/deactivation hooks.
+* [Fix] A blank email address was triggering server-side validation when it is not required.
+* [New] WP Customer Reviews can now be used on posts as well as pages.
+* [New] Page/Post will now jump to "thank you" or "error" message on the page after form is posted.
+* [Update] Plugin will no longer automatically disable pingbacks and comments on enabled posts/pages.
+
+= 2.1.1 (03-01-2011) =
+* [Fix] Updated "thank you" message to try to prevent wordpress escaping quotes.
+
+= 2.1.0 (03-01-2011) =
+* [Fix] Quick fix to correctly clear "thank you" message upon future visits to the reviews page.
+
+= 2.0.9 (03-01-2011) =
+* [Update] Some themes were not firing hooks to enqueue scripts and process the form. We are now enqueuing using a different hook.
+* [Update] Restructured the method in which some actions are called to try an eliminate future theme issues.
+
+= 2.0.8 (02-29-2011) =
+* [Fix] In place editing was not wrapping text automatically due to the 2.0.7 fix.
+
+== Upgrade Notice ==
+
+= 2.1.8 =
+Fixes some major bugs and compatibility issues, and adds many new features. It is highly recommended to upgrade.
