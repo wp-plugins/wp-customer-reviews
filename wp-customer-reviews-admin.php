@@ -823,16 +823,36 @@ class WPCustomerReviewsAdmin
             $reviews = $arr_Reviews[0];
             $total_reviews = $arr_Reviews[1];
         }
+		
+		$status_text = "";
+		switch ($this->p->review_status)
+		{
+			case -1:
+				$status_text = 'Submitted';
+				break;
+			case 0:
+				$status_text = 'Pending';
+				break;
+			case 1:
+				$status_text = 'Approved';
+				break;
+			case 2:
+				$status_text = 'Trashed';
+				break;
+		}
         
         $pending_count = $wpdb->get_results("SELECT COUNT(*) AS count_pending FROM `$this->dbtable` WHERE status=0");
         $pending_count = $pending_count[0]->count_pending;
+		
+		$approved_count = $wpdb->get_results("SELECT COUNT(*) AS count_approved FROM `$this->dbtable` WHERE status=1");
+        $approved_count = $approved_count[0]->count_approved;
 
         $trash_count = $wpdb->get_results("SELECT COUNT(*) AS count_trash FROM `$this->dbtable` WHERE status=2");
         $trash_count = $trash_count[0]->count_trash;
         ?>
         <div id="wpcr_respond_1" class="wrap">
             <div class="icon32" id="icon-edit-comments"><br /></div>
-            <h2>Customer Reviews</h2>
+            <h2>Customer Reviews - <?php echo $status_text; ?> Reviews</h2>
             
               <ul class="subsubsub">
                 <li class="all"><a <?php if ($this->p->review_status == -1) { echo 'class="current"'; } ?> href="?page=wpcr_view_reviews&amp;review_status=-1">All</a> |</li>
@@ -840,7 +860,7 @@ class WPCustomerReviewsAdmin
                     <span class="count">(<span class="pending-count"><?php echo $pending_count;?></span>)</span></a> |
                 </li>
                 <li class="approved"><a <?php if ($this->p->review_status == 1) { echo 'class="current"'; } ?> href="?page=wpcr_view_reviews&amp;review_status=1">Approved
-					<span class="count">(<span class="pending-count"><?php echo $total_reviews;?></span>)</span></a> |
+					<span class="count">(<span class="pending-count"><?php echo $approved_count;?></span>)</span></a> |
 				</li>
                 <li class="trash"><a <?php if ($this->p->review_status == 2) { echo 'class="current"'; } ?> href="?page=wpcr_view_reviews&amp;review_status=2">Trash</a>
                     <span class="count">(<span class="pending-count"><?php echo $trash_count;?></span>)</span></a>
@@ -894,7 +914,7 @@ class WPCustomerReviewsAdmin
                   <?php
                   if (count($reviews) == 0) {
                       ?>
-                        <tr><td colspan="3" align="center"><br />There are no reviews yet.<br /><br /></td></tr>
+                        <tr><td colspan="3" align="center"><br />There are no <strong><?php echo $status_text; ?></strong> reviews yet.<br /><br /></td></tr>
                       <?php
                   }
                                     
