@@ -53,7 +53,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 == Changelog ==
 
 = 2.2.3 (04-19-2011) =
-* [Fix] In admin, the number of approved reviews was not being shown, unless you were on that active tab
+* [Fix] In admin, the number of approved reviews was not being shown, unless you were on that active tab.
 * [Update] In admin, text was added to better show you which tab you are on (Pending/Approved/Trash) when viewing reviews.
 
 = 2.2.2 (03-18-2011) =
