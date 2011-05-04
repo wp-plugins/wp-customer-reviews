@@ -1,6 +1,6 @@
 <?php
 /* 
- * Version:       2.2.3
+ * Version:       2.2.4
  * Plugin Name:   WP Customer Reviews
  * Plugin URI:    http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description:   WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.2.3';
+    var $plugin_version = '2.2.4';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -302,7 +302,7 @@ class WPCustomerReviews
         $max_rating = $row[0]->max_rating;
         $total_reviews = $row[0]->total;
         
-        $row = $wpdb->get_results( "SELECT review_text FROM `$this->dbtable` WHERE page_id=$pageID AND status=1 ORDER BY id DESC LIMIT 1" );
+        $row = $wpdb->get_results( "SELECT review_text FROM `$this->dbtable` WHERE page_id=$pageID AND status=1 ORDER BY date_time DESC LIMIT 1" );
 		$sample_text = substr($row[0]->review_text,0,180);
         
         $this->got_aggregate = array("aggregate" => $aggregate_rating,"max" => $max_rating,"total" => $total_reviews,"text" => $sample_text);
@@ -335,7 +335,7 @@ class WPCustomerReviews
             status,
 			page_id,
 			custom_fields
-            FROM `$this->dbtable` WHERE $qry_status $and_post ORDER BY id DESC $limit
+            FROM `$this->dbtable` WHERE $qry_status $and_post ORDER BY date_time DESC $limit
             " );
 			
         $total_reviews = $wpdb->get_results( "SELECT COUNT(*) AS total FROM `$this->dbtable` WHERE $qry_status $and_post" );
