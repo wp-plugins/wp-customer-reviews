@@ -79,9 +79,6 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * [Fix] An additional pagination issue was found and has been fixed.
 * [Update] A link to the admin page will now be included when notifications are sent for new reviews.
 
-= 2.1.6 (03-04-2011) =
-* [Fix] Focusing on the first form element was failing for some instances of jQuery.
-
 == Upgrade Notice ==
 
 = 2.2.4 =
