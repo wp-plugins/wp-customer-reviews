@@ -56,7 +56,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * [Fix] Reviews will now be sorted by date, as they should, instead of by order of submission.
 
 = 2.2.3 (04-19-2011) =
-* [Fix] In admin, the number of approved reviews was not being shown, unless you were on that active tab
+* [Fix] In admin, the number of approved reviews was not being shown, unless you were on that active tab.
 * [Update] In admin, text was added to better show you which tab you are on (Pending/Approved/Trash) when viewing reviews.
 
 = 2.2.2 (03-18-2011) =
@@ -78,9 +78,6 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * [Fix] Pagination has been fixed for blogs that do not use pretty permalinks.
 * [Fix] An additional pagination issue was found and has been fixed.
 * [Update] A link to the admin page will now be included when notifications are sent for new reviews.
-
-= 2.1.6 (03-04-2011) =
-* [Fix] Focusing on the first form element was failing for some instances of jQuery.
 
 == Upgrade Notice ==
 
