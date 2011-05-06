@@ -27,7 +27,7 @@
 
 class WPCustomerReviews
 {
-    var $plugin_version = '2.2.6';
+    var $plugin_version = '2.2.7';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
