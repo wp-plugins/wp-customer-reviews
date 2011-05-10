@@ -12,6 +12,7 @@ WP Customer Reviews allows your customers and visitors to leave reviews or testi
 
 There are many sites that are crawling for user-generated reviews now, including Google Places and Google Local Search. WP Customer Reviews allows you to setup a specific page on your blog to receive customer testimonials for your business/service OR to write reviews about multiple products (using multiple pages).
 
+* WP Multisite and Multiuser (WPMU / WPMS / Wordpress MU) compatible.
 * All submissions are moderated, which means that YOU choose which reviews get shown.
 * Reviews are displayed to visitors in a friendly format, but search engines see the hReview microformat (and RDFa soon!)
 * Multiple anti-spam measures to prevent automated spambots from submitting reviews.
@@ -50,7 +51,12 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 == Frequently Asked Questions ==
 * If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
 
+* If you have upgraded from a version prior to 2.2.8 and are in a multi-site configuration and lost your reviews, please contact us for the fix or refer to the second part of the first post here: wordpress.org/support/topic/heres-a-fix-for-multisite
+
 == Changelog ==
+
+= 2.2.8 (05-10-2011) =
+* [Update] Plugin should now be compatible with Wordpress Multisite / Multiuser (WPMS / WPMU / Wordpress MU)
 
 = 2.2.7 (05-05-2011) =
 * [Fix] Reviews will now be sorted by date, as they should, instead of by order of submission.
