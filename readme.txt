@@ -55,6 +55,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.2.9 (05-12-2011) =
+* [Fix] The plugin should no longer strip out double-spaces in sentences.
+
 = 2.2.8 (05-10-2011) =
 * [Update] Plugin should now be compatible with Wordpress Multisite / Multiuser (WPMS / WPMU / Wordpress MU)
 
@@ -74,18 +77,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 = 2.2.0 (03-07-2011) =
 * [Fix] Some versions of jQuery were not returning location attributes correctly. We are no longer using jQuery for this action.
 
-= 2.1.9 (03-07-2011) =
-* [Fix] Review stars will now display with the review form shown above or below the reviews content.
-
-= 2.1.8 (03-07-2011) =
-* [Fix] Show Form/Hide Form button has been fixed to properly display the correct message.
-
-= 2.1.7 (03-07-2011) =
-* [Fix] Pagination has been fixed for blogs that do not use pretty permalinks.
-* [Fix] An additional pagination issue was found and has been fixed.
-* [Update] A link to the admin page will now be included when notifications are sent for new reviews.
-
 == Upgrade Notice ==
 
-= 2.2.7 =
+= 2.2.9 =
 Fixes some compatibility issues.
