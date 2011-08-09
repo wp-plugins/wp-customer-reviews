@@ -2,7 +2,7 @@
 Contributors: bompus
 Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget, hproduct, product, snippet, snippets
-Requires at least: 3.0
+Requires at least: 2.8.6
 Tested up to: 3.3
 Stable tag: trunk
 
@@ -55,26 +55,25 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
-= 2.3.1 (08-09-2011) =
+= 2.3.2 =
+* [Update] Verified compatibility with Wordpress 3.3 - part 2
+
+= 2.3.1 =
 * [Update] Verified compatibility with Wordpress 3.3
 
-= 2.3.0 (08-09-2011) =
+= 2.3.0 =
 * [Fix] Updated methods to include required Javascript and CSS files. This should solve some compatibility issues with some themes.
 
-= 2.2.9 (05-12-2011) =
+= 2.2.9 =
 * [Fix] The plugin should no longer strip out double-spaces in sentences.
 
-= 2.2.8 (05-10-2011) =
+= 2.2.8 =
 * [Update] Plugin should now be compatible with Wordpress Multisite / Multiuser (WPMS / WPMU / Wordpress MU)
 
-= 2.2.7 (05-05-2011) =
+= 2.2.7 =
 * [Fix] Reviews will now be sorted by date, as they should, instead of by order of submission.
-
-= 2.2.3 (04-19-2011) =
-* [Fix] In admin, the number of approved reviews was not being shown, unless you were on that active tab.
-* [Update] In admin, text was added to better show you which tab you are on (Pending/Approved/Trash) when viewing reviews.
 
 == Upgrade Notice ==
 
-= 2.3.1 =
+= 2.3.2 =
 Fixes some compatibility issues.
