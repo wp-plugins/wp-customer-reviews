@@ -56,7 +56,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 == Changelog ==
 
 = 2.3.2 =
-* [Update] Verified compatibility with Wordpress 3.3 - part 2
+* [Update] Bumping version number to force WP Plugin Directory to update
 
 = 2.3.1 =
 * [Update] Verified compatibility with Wordpress 3.3
