@@ -55,6 +55,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.3.3 =
+* [Update] Forgot to bump internal version number
+
 = 2.3.2 =
 * [Update] Bumping version number to force WP Plugin Directory to update
 
@@ -75,5 +78,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 2.3.2 =
+= 2.3.3 =
 Fixes some compatibility issues.
