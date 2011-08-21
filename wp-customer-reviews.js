@@ -24,15 +24,14 @@ function wpcr_jump_to() {
 function valwpcrform_2(newid,oldid,err) {  
     
     var myval = '';
-    var patt = '';
     
     for (var i in wpcr_req) {
         var col = wpcr_req[i];
         if (newid === col && jQuery("#"+oldid).val() === "") {			
-			var nice_name = jQuery('label[for="'+oldid+'"]').html();
-			nice_name = nice_name.replace(":","");
-			nice_name = nice_name.replace("*","");
-			nice_name = jQuery.trim(nice_name);
+            var nice_name = jQuery('label[for="'+oldid+'"]').html();
+            nice_name = nice_name.replace(":","");
+            nice_name = nice_name.replace("*","");
+            nice_name = jQuery.trim(nice_name);
             err.push("You must include your "+nice_name+".");
         }
     }
@@ -67,7 +66,7 @@ function valwpcrform_2(newid,oldid,err) {
     return err;
 }
 
-function valwpcrform(me) {	
+function valwpcrform() {	
     var frating = parseInt(jQuery("#frating").val(), 10);
     if (!frating) { frating = 0; }
     
@@ -75,12 +74,13 @@ function valwpcrform(me) {
     
     jQuery("#wpcr_commentform").find('input, textarea').each(function(){
         var oldid = jQuery(this).attr('name');
+        var newid = oldid;
         var pos = wpcr_strpos(oldid,'-',0) + 1;
-		if (pos > 1) {
-			var newid = oldid.substring(pos);
-		} else {
-			var newid = oldid;
-		}
+        if (pos > 1) {
+            newid = oldid.substring(pos);
+        } else {
+            newid = oldid;
+        }
         err = valwpcrform_2(newid,oldid,err);
     });
     
@@ -119,14 +119,14 @@ function wpcr_showform() {
         jQuery("#wpcr_button_1").html('Click here to hide form');
     } else {
         jQuery("#wpcr_button_1").html(wpcr_old_btn_val);
-		wpcr_old_btn_val = 'Click here to hide form';
+        wpcr_old_btn_val = 'Click here to hide form';
     }
     jQuery("#wpcr_table_2").find("input:text:visible:first").focus();
 }
 
 jQuery(document).ready(function(){
     jQuery("#wpcr_button_1").click(wpcr_showform);
-	jQuery("#wpcr_commentform").submit(valwpcrform);
+    jQuery("#wpcr_commentform").submit(valwpcrform);
 
     jQuery("#wpcr_commentform .wpcr_rating a").click(function(e) {
             e.preventDefault();

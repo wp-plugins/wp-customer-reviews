@@ -27,6 +27,7 @@
 /* review text */
 #wpcr_respond_1 blockquote.description { font-size:14px; font-weight:normal; }
 #wpcr_respond_1 blockquote.description p { font-size:14px; font-weight:normal;  }
+#wpcr_respond_1 p.response { font-size:14px; font-weight:normal; font-style:italic; }
 
 #wpcr_postcomment { font-size:1.1em; font-weight:bold; }
 

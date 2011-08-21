@@ -3,8 +3,8 @@
  * Plugin Name: WP Customer Reviews
  * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.3.3
- * Revision Date: August 09, 2011
+ * Version: 2.3.4
+ * Revision Date: August 21, 2011
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.3
  * Author: Go Web Solutions
@@ -29,7 +29,7 @@
 
 class WPCustomerReviews {
 
-    var $plugin_version = '2.3.3';
+    var $plugin_version = '2.3.4';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -47,7 +47,9 @@ class WPCustomerReviews {
         add_action('the_content', array(&$this, 'do_the_content'), 10); /* 10 prevents a conflict with some odd themes */
         add_action('init', array(&$this, 'init'));
         add_action('admin_init', array(&$this, 'admin_init'));
-        add_action('wp_print_scripts', array(&$this, 'enqueue_scripts'), 11); /* try enqueueing scripts here */
+                
+        add_action('wp_print_styles',array(&$this, 'add_style')); /* add style */
+        add_action('template_redirect',array(&$this, 'add_script')); /* add script */
 
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array(&$this, 'plugin_settings_link'));
         add_action('admin_menu', array(&$this, 'addmenu'));
@@ -71,7 +73,7 @@ class WPCustomerReviews {
 
         global $WPCustomerReviewsAdmin;
         $this->include_admin(); /* include admin functions */
-        $WPCustomerReviewsAdmin->add_meta_box();
+        $WPCustomerReviewsAdmin->wpcr_add_meta_box();
     }
 
     /* forward to admin file */
@@ -118,6 +120,8 @@ class WPCustomerReviews {
             'business_url' => $home_domain,
             'business_zip' => '',
             'dbversion' => 0,
+            'enable_posts_default' => 0,
+            'enable_pages_default' => 0,
             'field_custom' => array(),
             'form_location' => 0,
             'goto_leave_text' => 'Click here to submit your review.',
@@ -220,6 +224,19 @@ class WPCustomerReviews {
             update_option('wpcr_options', $this->options);
             $migrated = true;
         }
+        
+        /* upgrade to 2.3.4 */
+        if ($current_dbversion < 234) {
+            /* add admin review response to database, extends some fields */
+            $wpdb->query("ALTER TABLE `$this->dbtable` ADD `review_response` text");
+            $wpdb->query("ALTER TABLE `$this->dbtable` CHANGE `reviewer_name` `reviewer_name` VARCHAR( 150 )");
+            $wpdb->query("ALTER TABLE `$this->dbtable` CHANGE `reviewer_email` `reviewer_email` VARCHAR( 150 )");
+            
+            $this->options['dbversion'] = 234;
+            $current_dbversion = 234;
+            update_option('wpcr_options', $this->options);
+            $migrated = true;
+        }
 
         /* done with all migrations, push dbversion to current version */
         if ($current_dbversion != $plugin_db_version || $migrated == true) {
@@ -237,55 +254,71 @@ class WPCustomerReviews {
 
         return false;
     }
-
-    function enqueue_scripts() {
+    
+    function is_active_page() {
         global $post;
-
-        $is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
         
-        /* make sure its a single page/post and not a list of posts */
-        if ( $is_active_page && is_singular() )
+        if ( !isset($post) || !isset($post->ID) || intval($post->ID) == 0 ) {
+            return false; /* we can only use the plugin if we have a valid post ID */
+        }
+        
+        if (!is_singular()) {
+            return false; /* not on a single post/page view */
+        }
+        
+        $has_shortcode = strpos($post->post_content,'[WPCR_INSERT]');
+        if ( $has_shortcode !== false ) {
+            return 'shortcode';
+        }
+        
+        $is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
+        if ( $is_active_page ) {
+            return 'enabled';
+        }
+        
+        return false;
+    }
+    
+    function add_style() {
+        if (!$this->is_active_page()) { return; }
+        
+        wp_enqueue_style('wp-customer-reviews');
+    }
+    
+    function add_script() {
+        if (!$this->is_active_page()) { return; }
+        
+        global $post;
+                
+        wp_enqueue_script('wp-customer-reviews');
+        
+        /* do this here so we can redirect cleanly */
+        $GET_P = "submitwpcr_$post->ID";
+
+        if (isset($this->p->$GET_P) && $this->p->$GET_P == $this->options['submit_button_text'])
         {
-            /* do this here so we can redirect cleanly */
-            $GET_P = "submitwpcr_$post->ID";
+            $msg = $this->add_review($post->ID);
 
-            if (isset($this->p->$GET_P) && $this->p->$GET_P == $this->options['submit_button_text'])
-            {
-                $msg = $this->add_review($post->ID);
+            $has_error = $msg[0];
+            $status_msg = $msg[1];
+            $cookie = array('wpcr_status_msg' => $status_msg);
 
-                $has_error = $msg[0];
-                $status_msg = $msg[1];
-                $cookie = array('wpcr_status_msg' => $status_msg);
+            $url = get_permalink($post->ID);
 
-                $url = get_permalink($post->ID);
-
-                if (headers_sent() == true) {
-                    echo $this->js_redirect($url, $cookie); /* use JS redirect and add cookie before redirect */
-                } else {
-                    foreach ($cookie as $col => $val) {
-                        setcookie($col, $val); /* add cookie via headers */
-                    }
-                    ob_end_clean();
-                    wp_redirect($url); /* nice redirect */
+            if (headers_sent() == true) {
+                echo $this->js_redirect($url, $cookie); /* use JS redirect and add cookie before redirect */
+            } else {
+                foreach ($cookie as $col => $val) {
+                    setcookie($col, $val); /* add cookie via headers */
                 }
-
-                exit();
+                ob_end_clean();
+                wp_redirect($url); /* nice redirect */
             }
+
+            exit();
         }
     }
-
-    function enqueue_everywhere() {
-        global $post;
-
-        /* we include them everywhere to prevent some theme issues */
-        wp_register_style('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.css', array(), $this->plugin_version);
-        wp_enqueue_style('wp-customer-reviews');
-        
-        wp_enqueue_script('jquery');
-        wp_register_script('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.js', array(), $this->plugin_version);
-        wp_enqueue_script('wp-customer-reviews');
-    }
-
+    
     function rand_string($length) {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -354,12 +387,13 @@ class WPCustomerReviews {
             reviewer_email,
             review_title,
             review_text,
+            review_response,
             review_rating,
             reviewer_url,
-			reviewer_ip,
+            reviewer_ip,
             status,
-			page_id,
-			custom_fields
+            page_id,
+            custom_fields
             FROM `$this->dbtable` WHERE $qry_status $and_post ORDER BY date_time DESC $limit
             ");
 
@@ -371,21 +405,17 @@ class WPCustomerReviews {
 
     function aggregate_footer() {
         if ($this->options['show_hcard_on'] != 0 && $this->shown_hcard === false) {
-            /* may need to uncomment to validate */
-            /* remove_filter ('the_content', 'wpautop'); */
 
             $this->shown_hcard = true;
 
             /* start - make sure we should continue */
-            global $post;
             $show = false;
-            $is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
 
             if ($this->options['show_hcard_on'] == 1) {
                 $show = true;
             } else if ($this->options['show_hcard_on'] == 2 && ( is_home() || is_front_page() )) {
                 $show = true;
-            } else if ($this->options['show_hcard_on'] == 3 && $is_active_page && is_singular()) {
+            } else if ($this->options['show_hcard_on'] == 3 && $this->is_active_page()) {
                 $show = true;
             } /* show only on a single page with is_singular() */
             /* end - make sure we should continue */
@@ -490,21 +520,17 @@ class WPCustomerReviews {
             return $out;
         }
     }
-
-    function do_the_content($original_content) {
-        global $post;
-
-        $the_content = '';
-
-        $is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
-        /* return normal content if this is not an enabled page, or if this is a post not on single post view */
-        if (!$is_active_page || !is_singular()) {
-            $the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer then */
-            return $original_content . $the_content;
+        
+    function output_reviews_show($postid, $perpage, $max) {
+        
+        if ($max != -1) {
+            $thispage = 1;
+        } else {
+            $thispage = $this->page;
         }
-
-        $arr_Reviews = $this->get_reviews($post->ID, $this->page, $this->options['reviews_per_page'], 1);
-
+                
+        $arr_Reviews = $this->get_reviews($postid, $thispage, $perpage, 1);
+        
         $reviews = $arr_Reviews[0];
         $total_reviews = intval($arr_Reviews[1]);
 
@@ -515,27 +541,32 @@ class WPCustomerReviews {
 
         /* trying to access a page that does not exists -- send to main page */
         if (isset($this->p->wpcrp) && count($reviews) == 0) {
-            $url = get_permalink($post->ID);
+            $url = get_permalink($postid);
             $the_content = $this->js_redirect($url);
-            return $original_content . $the_content;
+            return $the_content;
+        }
+        
+        if ($postid == 0) {
+            /* if using shortcode to show reviews for all pages, could do weird things when using product type */
+            $postid = $reviews[0]->page_id;
         }
 
-        $meta_product_name = get_post_meta($post->ID, 'wpcr_product_name', true);
+        $meta_product_name = get_post_meta($postid, 'wpcr_product_name', true);
         if (!$meta_product_name) {
-            $meta_product_name = get_the_title($post->ID);
+            $meta_product_name = get_the_title($postid);
         }
 
-        $meta_product_desc = get_post_meta($post->ID, 'wpcr_product_desc', true);
-        $meta_product_brand = get_post_meta($post->ID, 'wpcr_product_brand', true);
-        $meta_product_upc = get_post_meta($post->ID, 'wpcr_product_upc', true);
-        $meta_product_sku = get_post_meta($post->ID, 'wpcr_product_sku', true);
-        $meta_product_model = get_post_meta($post->ID, 'wpcr_product_model', true);
+        $meta_product_desc = get_post_meta($postid, 'wpcr_product_desc', true);
+        $meta_product_brand = get_post_meta($postid, 'wpcr_product_brand', true);
+        $meta_product_upc = get_post_meta($postid, 'wpcr_product_upc', true);
+        $meta_product_sku = get_post_meta($postid, 'wpcr_product_sku', true);
+        $meta_product_model = get_post_meta($postid, 'wpcr_product_model', true);
 
         if (count($reviews) == 0) {
             $the_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>';
         } else {
 
-            $this->get_aggregate_reviews($post->ID);
+            $this->get_aggregate_reviews($postid);
 
             $summary = $this->got_aggregate["text"];
             $best_score = number_format($this->got_aggregate["max"], 1);
@@ -543,25 +574,25 @@ class WPCustomerReviews {
 
             if ($this->options['hreview_type'] == 'product') {
                 $reviews_content .= '
-				<span class="item hproduct" id="hproduct-' . $post->ID . '">
-					<span class="wpcr_hide">
-						<span class="brand">' . $meta_product_brand . '</span>
-						<span class="fn">' . $meta_product_name . '</span>
-						<span class="description">' . $meta_product_desc . '</span>
-						<span class="identifier">
-							<span class="type">SKU</span>
-							<span class="value">' . $meta_product_sku . '</span>
-						</span>
-						<span class="identifier">
-							<span class="type">UPC</span>
-							<span class="value">' . $meta_product_upc . '</span>
-						</span>
-						<span class="identifier">
-							<span class="type">Model</span>
-							<span class="value">' . $meta_product_model . '</span>
-						</span>
-					</span>
-				';
+                    <span class="item hproduct" id="hproduct-' . $postid . '">
+                        <span class="wpcr_hide">
+                            <span class="brand">' . $meta_product_brand . '</span>
+                            <span class="fn">' . $meta_product_name . '</span>
+                            <span class="description">' . $meta_product_desc . '</span>
+                            <span class="identifier">
+                                <span class="type">SKU</span>
+                                <span class="value">' . $meta_product_sku . '</span>
+                            </span>
+                            <span class="identifier">
+                                <span class="type">UPC</span>
+                                <span class="value">' . $meta_product_upc . '</span>
+                            </span>
+                            <span class="identifier">
+                                <span class="type">Model</span>
+                                <span class="value">' . $meta_product_model . '</span>
+                            </span>
+                        </span>
+                    ';
             }
 
             foreach ($reviews as $review) {
@@ -590,129 +621,171 @@ class WPCustomerReviews {
                 }
 
                 $review->review_text = nl2br($review->review_text);
+                $review->review_response = nl2br($review->review_response);
+                if (strlen($review->review_response) > 0) {
+                    $review->review_response = '<strong>Response:</strong> ' . $review->review_response;
+                }
 
                 $custom_fields_unserialized = @unserialize($review->custom_fields);
                 if (!is_array($custom_fields_unserialized)) {
                     $custom_fields_unserialized = array();
                 }
-
+                
                 $custom_shown = '';
                 foreach ($this->options['field_custom'] as $i => $val) {
                     $show = $this->options['show_custom'][$i];
                     if ($show == 1 && $custom_fields_unserialized[$val] != '') {
-                        if ($custom_shown == '') {
-                            $custom_shown = '<br />';
-                        }
-                        $custom_i = "custom_$i";
-                        $custom_shown .= $val . ': ' . $custom_fields_unserialized[$val] . '&nbsp;|&nbsp;';
+                        $custom_shown .= "<div class='wpcr_fl'>" . $val . ': ' . $custom_fields_unserialized[$val] . '&nbsp;&bull;&nbsp;</div>';
                     }
                 }
 
-                $custom_shown = rtrim($custom_shown, "|&nbsp;");
+                $custom_shown = preg_replace("%&bull;&nbsp;</div>$%si","</div><div class='wpcr_clear'></div>",$custom_shown);
 
                 $name_block = '' .
-                        '<div class="wpcr_fl wpcr_rname">' .
-                        '<abbr title="' . $this->iso8601(strtotime($review->date_time)) . '" class="dtreviewed">' . date("M d, Y", strtotime($review->date_time)) . '</abbr>&nbsp;' .
-                        '<span class="' . $hide_name . '">by</span>&nbsp;' .
-                        '<span class="reviewer vcard" id="hreview-wpcr-reviewer-' . $review->id . '">' .
-                        '<span class="fn ' . $hide_name . '">' . $review->reviewer_name . '</span>' .
-                        '</span>' .
-                        $custom_shown .
-                        '</div>';
+                    '<div class="wpcr_fl wpcr_rname">' .
+                    '<abbr title="' . $this->iso8601(strtotime($review->date_time)) . '" class="dtreviewed">' . date("M d, Y", strtotime($review->date_time)) . '</abbr>&nbsp;' .
+                    '<span class="' . $hide_name . '">by</span>&nbsp;' .
+                    '<span class="reviewer vcard" id="hreview-wpcr-reviewer-' . $review->id . '">' .
+                    '<span class="fn ' . $hide_name . '">' . $review->reviewer_name . '</span>' .
+                    '</span>' .
+                    '<div class="wpcr_clear"></div>' .
+                    $custom_shown .
+                    '</div>';
 
                 if ($this->options['hreview_type'] == 'product') {
                     $reviews_content .= '
-						<div class="hreview" id="hreview-' . $review->id . '">
-							<' . $title_tag . ' class="summary ' . $hidesummary . '">' . $review->review_title . '</' . $title_tag . '>
-							<span class="item" id="hreview-wpcr-hproduct-for-' . $review->id . '" style="display:none;">
-								<span class="fn">' . $meta_product_name . '</span>
-							</span>
-							<div class="wpcr_fl wpcr_sc">
-								<abbr class="rating" title="' . $review->review_rating . '"></abbr>
-								<div class="wpcr_rating">
-									' . $this->output_rating($review->review_rating, false) . '
-								</div>					
-							</div>
-							' . $name_block . '
-							<div class="wpcr_clear wpcr_spacing1"></div>
-							<blockquote class="description"><p>' . $review->review_text . '</p></blockquote>
-							<span style="display:none;" class="type">product</span>
-							<span style="display:none;" class="version">0.3</span>
-						</div>
-						<hr />';
+                        <div class="hreview" id="hreview-' . $review->id . '">
+                            <' . $title_tag . ' class="summary ' . $hidesummary . '">' . $review->review_title . '</' . $title_tag . '>
+                            <span class="item" id="hreview-wpcr-hproduct-for-' . $review->id . '" style="display:none;">
+                                <span class="fn">' . $meta_product_name . '</span>
+                            </span>
+                            <div class="wpcr_fl wpcr_sc">
+                                <abbr class="rating" title="' . $review->review_rating . '"></abbr>
+                                <div class="wpcr_rating">
+                                    ' . $this->output_rating($review->review_rating, false) . '
+                                </div>					
+                            </div>
+                            ' . $name_block . '
+                            <div class="wpcr_clear wpcr_spacing1"></div>
+                            <blockquote class="description"><p>' . $review->review_text . '</p></blockquote>
+                            <p class="response">' . $review->review_response . '</p>
+                            <span style="display:none;" class="type">product</span>
+                            <span style="display:none;" class="version">0.3</span>
+                        </div>
+                        <hr />';
                 } else if ($this->options['hreview_type'] == 'business') {
                     $reviews_content .= '
-                    <div class="hreview" id="hreview-' . $review->id . '">
-                        <' . $title_tag . ' class="summary ' . $hidesummary . '">' . $review->review_title . '</' . $title_tag . '>
-                        <div class="wpcr_fl wpcr_sc">
-                            <abbr class="rating" title="' . $review->review_rating . '"></abbr>
-                            <div class="wpcr_rating">
-                                ' . $this->output_rating($review->review_rating, false) . '
-                            </div>					
-                        </div>
-                        ' . $name_block . '
-                        <div class="wpcr_clear wpcr_spacing1"></div>
-                        <span class="item vcard" id="hreview-wpcr-hcard-for-' . $review->id . '" style="display:none;">
-                            <a class="url fn org" href="' . $this->options['business_url'] . '">' . $this->options['business_name'] . '</a>
-                            <span class="tel">' . $this->options['business_phone'] . '</span>
-							<span class="adr">
-								<span class="street-address">' . $this->options['business_street'] . '</span>
-								<span class="locality">' . $this->options['business_city'] . '</span>
-								<span class="region">' . $this->options['business_state'] . '</span>, <span class="postal-code">' . $this->options['business_zip'] . '</span>
-								<span class="country-name">' . $this->options['business_country'] . '</span>
-							</span>
-                        </span>
-                        <blockquote class="description"><p>' . $review->review_text . '</p></blockquote>
-						<span style="display:none;" class="type">business</span>
-                        <span style="display:none;" class="version">0.3</span>
-                   </div>
-				   <hr />';
+                        <div class="hreview" id="hreview-' . $review->id . '">
+                            <' . $title_tag . ' class="summary ' . $hidesummary . '">' . $review->review_title . '</' . $title_tag . '>
+                            <div class="wpcr_fl wpcr_sc">
+                                <abbr class="rating" title="' . $review->review_rating . '"></abbr>
+                                <div class="wpcr_rating">
+                                    ' . $this->output_rating($review->review_rating, false) . '
+                                </div>					
+                            </div>
+                            ' . $name_block . '
+                            <div class="wpcr_clear wpcr_spacing1"></div>
+                            <span class="item vcard" id="hreview-wpcr-hcard-for-' . $review->id . '" style="display:none;">
+                                <a class="url fn org" href="' . $this->options['business_url'] . '">' . $this->options['business_name'] . '</a>
+                                <span class="tel">' . $this->options['business_phone'] . '</span>
+                                <span class="adr">
+                                    <span class="street-address">' . $this->options['business_street'] . '</span>
+                                    <span class="locality">' . $this->options['business_city'] . '</span>
+                                    <span class="region">' . $this->options['business_state'] . '</span>, <span class="postal-code">' . $this->options['business_zip'] . '</span>
+                                    <span class="country-name">' . $this->options['business_country'] . '</span>
+                                </span>
+                            </span>
+                            <blockquote class="description"><p>' . $review->review_text . '</p></blockquote>
+                            <p class="response">' . $review->review_response . '</p>
+                            <span style="display:none;" class="type">business</span>
+                            <span style="display:none;" class="version">0.3</span>
+                       </div>
+                       <hr />';
                 }
             }
 
             if ($this->options['hreview_type'] == 'product') {
                 $reviews_content .= '
-				<span class="hreview-aggregate haggregatereview" id="hreview-wpcr-aggregate">
-				   <span style="display:none;">
-					   <span class="rating">
-						 <span class="average">' . $average_score . '</span>
-						 <span class="best">' . $best_score . '</span>
-					   </span>  
-					   <span class="votes">' . $this->got_aggregate["total"] . '</span>
-					   <span class="count">' . $this->got_aggregate["total"] . '</span>
-					   <span class="summary">' . $summary . '</span>
-					   <span class="item" id="hreview-wpcr-vcard">
-							<span class="fn">' . $meta_product_name . '</span>
-					   </span>
-				   </span>
-				</span>';
+                    <span class="hreview-aggregate haggregatereview" id="hreview-wpcr-aggregate">
+                       <span style="display:none;">
+                           <span class="rating">
+                             <span class="average">' . $average_score . '</span>
+                             <span class="best">' . $best_score . '</span>
+                           </span>  
+                           <span class="votes">' . $this->got_aggregate["total"] . '</span>
+                           <span class="count">' . $this->got_aggregate["total"] . '</span>
+                           <span class="summary">' . $summary . '</span>
+                           <span class="item" id="hreview-wpcr-vcard">
+                            <span class="fn">' . $meta_product_name . '</span>
+                           </span>
+                       </span>
+                    </span>';
                 $reviews_content .= '</span>'; /* end hProduct */
             } else if ($this->options['hreview_type'] == 'business') {
                 $reviews_content .= '
-				<span class="hreview-aggregate" id="hreview-wpcr-aggregate">
-				   <span style="display:none;">
-						<span class="item vcard" id="hreview-wpcr-vcard">
-							<a class="url fn org" href="' . $this->options['business_url'] . '">' . $this->options['business_name'] . '</a>
-							<span class="tel">' . $this->options['business_phone'] . '</span>
-							<span class="adr">
-								<span class="street-address">' . $this->options['business_street'] . '</span>
-								<span class="locality">' . $this->options['business_city'] . '</span>
-								<span class="region">' . $this->options['business_state'] . '</span>, <span class="postal-code">' . $this->options['business_zip'] . '</span>
-								<span class="country-name">' . $this->options['business_country'] . '</span>
-							</span>
-						</span>
-					   <span class="rating">
-						 <span class="average">' . $average_score . '</span>
-						 <span class="best">' . $best_score . '</span>
-					   </span>  
-					   <span class="votes">' . $this->got_aggregate["total"] . '</span>
-					   <span class="count">' . $this->got_aggregate["total"] . '</span>
-					   <span class="summary">' . $summary . '</span>
-				   </span>
-				</span>
-				';
+                    <span class="hreview-aggregate" id="hreview-wpcr-aggregate">
+                       <span style="display:none;">
+                            <span class="item vcard" id="hreview-wpcr-vcard">
+                                <a class="url fn org" href="' . $this->options['business_url'] . '">' . $this->options['business_name'] . '</a>
+                                <span class="tel">' . $this->options['business_phone'] . '</span>
+                                <span class="adr">
+                                    <span class="street-address">' . $this->options['business_street'] . '</span>
+                                    <span class="locality">' . $this->options['business_city'] . '</span>
+                                    <span class="region">' . $this->options['business_state'] . '</span>, <span class="postal-code">' . $this->options['business_zip'] . '</span>
+                                    <span class="country-name">' . $this->options['business_country'] . '</span>
+                                </span>
+                            </span>
+                           <span class="rating">
+                                 <span class="average">' . $average_score . '</span>
+                                 <span class="best">' . $best_score . '</span>
+                           </span>  
+                           <span class="votes">' . $this->got_aggregate["total"] . '</span>
+                           <span class="count">' . $this->got_aggregate["total"] . '</span>
+                           <span class="summary">' . $summary . '</span>
+                       </span>
+                    </span>
+                    ';
             }
         }
+        
+        return $reviews_content;
+    }
+
+    function do_the_content($original_content) {
+        global $post;
+
+        $the_content = '';
+        
+        $has_show_shortcode = preg_match("%\[WPCR_SHOW=(.*?),(\d+)\]%",$original_content,$matches);
+        while ($has_show_shortcode) {
+            
+            /* displaying reviews using short code */
+            preg_match("%\[WPCR_SHOW=(.*?),(\d+)\]%",$original_content,$matches);
+            
+            $ret = '';
+            
+            if ( isset($matches[1]) && isset($matches[2]) && intval($matches[2]) != 0 ) {
+                                
+                if ($matches[1] == 'ALL') { $matches[1] = -1; /* -1 queries all reviews */ }
+                $postid = intval($matches[1]);
+                $max = intval($matches[2]);
+                
+                $ret = $this->output_reviews_show($postid,$max,$max);
+            }
+            
+            $original_content = preg_replace("%\[WPCR_SHOW=(.*?),(\d+)\]%",$ret,$original_content);
+            $has_show_shortcode = preg_match("%\[WPCR_SHOW=(.*?),(\d+)\]%",$original_content,$matches);
+        }
+        
+        $is_active_page = $this->is_active_page();
+        
+        /* return normal content if this is not an enabled page, or if this is a post not on single post view */
+        if (!$is_active_page) {
+            $the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer then */
+            return $original_content . $the_content;
+        }
+        
+        $the_content .= $this->output_reviews_show( $post->ID, $this->options['reviews_per_page'], -1 );
 
         $the_content .= '<div id="wpcr_respond_1">'; /* start the div */
 
@@ -737,7 +810,11 @@ class WPCustomerReviews {
         //$the_content = preg_replace('/\n\r|\r\n|\n|\r|\t|\s{2}/', '', $the_content); /* minify to prevent automatic line breaks */
         $the_content = preg_replace('/\n\r|\r\n|\n|\r|\t/', '', $the_content); /* minify to prevent automatic line breaks, not removing double spaces */
 
-        return $original_content . $the_content;
+        if ($is_active_page == 'shortcode') {
+            return preg_replace( "%\[WPCR_INSERT\]%", $the_content, $original_content );
+        } else {
+            return $original_content . $the_content;
+        }
     }
 
     function output_rating($rating, $enable_hover) {
@@ -829,9 +906,12 @@ class WPCustomerReviews {
         }
 
         $some_required = '';
+        
         $req_js = "<script type='text/javascript'>";
+        
         foreach ($this->options['require_fields'] as $col => $val) {
             if ($val == 1) {
+                $col = str_replace("'","\'",$col);
                 $req_js .= "wpcr_req.push('$col');";
                 $some_required = '<small>* Required Field</small>';
             }
@@ -843,6 +923,7 @@ class WPCustomerReviews {
                 $some_required = '<small>* Required Field</small>';
             }
         }
+        
         $req_js .= "</script>\n";
 
         $out = '';
@@ -1046,7 +1127,8 @@ class WPCustomerReviews {
             $this->page = 1;
         }
         
-        $this->enqueue_everywhere();
+        wp_register_style('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.css', array(), $this->plugin_version);
+        wp_register_script('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.js', array('jquery'), $this->plugin_version);
     }
 
     function activate() {

@@ -21,6 +21,7 @@ There are many sites that are crawling for user-generated reviews now, including
 * Works with caching plugins and all themes.
 * Includes an external stylesheet so you can modify it to better fit your theme.
 * Reviews can be edited by admin for content and date.
+* Admin responses can be made and shown under each review.
 * Support for adding your own custom fields with one click.
 * The plugin can be used on more than one page.
 * Supports both `Business` and `Product` hReview types.
@@ -55,6 +56,19 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.3.4 =
+* [Fix] Theme compatibility updates
+* [Fix] Last characters of the last custom field was being cut off
+* [Update] Several internal cleanups and refactorings
+* [Update] Additional custom fields have been added for a total of 6
+* [Update] CSS and JS are back to only being loaded when on an enabled page/post
+* [Update] Cleaning up custom field display for better separation on page display
+* [Update] Added setting to enable plugin for all future posts/pages
+* [Update] Added buttons to enable/disable plugin for all existing posts/pages
+* [Update] Admin can now respond to reviews. (Thank you Benjamin W for a great user contribution)
+* [Update] Beta testing - Shortcode has been added for displaying the reviews/form anywhere in any page
+* [Update] Beta testing - Shortcode has been added for displaying review contents from any page in any other page
+
 = 2.3.3 =
 * [Update] Forgot to bump internal version number
 
@@ -73,10 +87,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 = 2.2.8 =
 * [Update] Plugin should now be compatible with Wordpress Multisite / Multiuser (WPMS / WPMU / Wordpress MU)
 
-= 2.2.7 =
-* [Fix] Reviews will now be sorted by date, as they should, instead of by order of submission.
-
 == Upgrade Notice ==
 
-= 2.3.3 =
+= 2.3.4 =
 Fixes some compatibility issues.
