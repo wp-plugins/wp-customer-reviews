@@ -90,4 +90,4 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 == Upgrade Notice ==
 
 = 2.3.4 =
-Fixes some compatibility issues.
+Fixes some compatibility issues. Adds some new features.
