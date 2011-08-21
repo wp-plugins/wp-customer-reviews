@@ -3,7 +3,7 @@
  * Plugin Name: WP Customer Reviews
  * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.3.5
+ * Version: 2.3.6
  * Revision Date: August 21, 2011
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.3
@@ -29,7 +29,7 @@
 
 class WPCustomerReviews {
 
-    var $plugin_version = '2.3.5';
+    var $plugin_version = '2.3.6';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -535,7 +535,6 @@ class WPCustomerReviews {
         $total_reviews = intval($arr_Reviews[1]);
 
         $reviews_content = '';
-        $ftitle = '';
         $hidesummary = '';
         $title_tag = $this->options['title_tag'];
 
@@ -748,7 +747,7 @@ class WPCustomerReviews {
             }
         }
         
-        return $reviews_content;
+        return array($reviews_content, $total_reviews);
     }
 
     function do_the_content($original_content) {
@@ -770,7 +769,8 @@ class WPCustomerReviews {
                 $postid = intval($matches[1]);
                 $max = intval($matches[2]);
                 
-                $ret = $this->output_reviews_show($postid,$max,$max);
+                $ret_Arr = $this->output_reviews_show($postid,$max,$max);
+                $ret = $ret_Arr[0];
             }
             
             $original_content = preg_replace("%\[WPCR_SHOW=(.*?),(\d+)\]%",$ret,$original_content);
@@ -791,7 +791,9 @@ class WPCustomerReviews {
             $the_content .= $this->show_reviews_form();
         }
 
-        $the_content .= $this->output_reviews_show( $post->ID, $this->options['reviews_per_page'], -1 );
+        $ret_Arr = $this->output_reviews_show( $post->ID, $this->options['reviews_per_page'], -1 );
+        $the_content .= $ret_Arr[0];
+        $total_reviews = $ret_Arr[1];
         
         $the_content .= $this->pagination($total_reviews);
 

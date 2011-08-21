@@ -56,6 +56,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.3.6 =
+* [Fix] 2.3.4 had also broken pagination. This should now be working again.
+
 = 2.3.5 =
 * [Fix] The previous release had broken some of the styles, since it output the reviews outside of their expected container.
 
@@ -83,12 +86,6 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 = 2.3.0 =
 * [Fix] Updated methods to include required Javascript and CSS files. This should solve some compatibility issues with some themes.
-
-= 2.2.9 =
-* [Fix] The plugin should no longer strip out double-spaces in sentences.
-
-= 2.2.8 =
-* [Update] Plugin should now be compatible with Wordpress Multisite / Multiuser (WPMS / WPMU / Wordpress MU)
 
 == Upgrade Notice ==
 
