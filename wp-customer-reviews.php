@@ -3,7 +3,7 @@
  * Plugin Name: WP Customer Reviews
  * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.3.4
+ * Version: 2.3.5
  * Revision Date: August 21, 2011
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.3
@@ -29,7 +29,7 @@
 
 class WPCustomerReviews {
 
-    var $plugin_version = '2.3.4';
+    var $plugin_version = '2.3.5';
     var $dbtable = 'wpcreviews';
     var $options = array();
     var $got_aggregate = false;
@@ -785,15 +785,14 @@ class WPCustomerReviews {
             return $original_content . $the_content;
         }
         
-        $the_content .= $this->output_reviews_show( $post->ID, $this->options['reviews_per_page'], -1 );
-
         $the_content .= '<div id="wpcr_respond_1">'; /* start the div */
 
         if ($this->options['form_location'] == 0) {
             $the_content .= $this->show_reviews_form();
         }
 
-        $the_content .= $reviews_content;
+        $the_content .= $this->output_reviews_show( $post->ID, $this->options['reviews_per_page'], -1 );
+        
         $the_content .= $this->pagination($total_reviews);
 
         if ($this->options['form_location'] == 1) {
@@ -944,29 +943,29 @@ class WPCustomerReviews {
                                     ' . $fields;
 
         $out2 = '   
-                                    <tr>
-                                        <td><label class="comment-field">Rating:</label></td>
-                                        <td><div class="wpcr_rating">' . $this->output_rating(0, true) . '</div></td>
-                                    </tr>';
+            <tr>
+                <td><label class="comment-field">Rating:</label></td>
+                <td><div class="wpcr_rating">' . $this->output_rating(0, true) . '</div></td>
+            </tr>';
 
         $out3 = '
-                                    <tr><td colspan="2"><label for="' . $rand_prefixes[5] . '-ftext" class="comment-field">Review:</label></td></tr>
-                                    <tr><td colspan="2"><textarea id="' . $rand_prefixes[5] . '-ftext" name="' . $rand_prefixes[5] . '-ftext" rows="8" cols="50">' . $this->p->ftext . '</textarea></td></tr>
-                                    <tr>
-                                        <td colspan="2" id="wpcr_check_confirm">
-                                            ' . $some_required . '
-                                            <div class="wpcr_clear"></div>    
-                                            <input type="checkbox" name="' . $rand_prefixes[6] . '-fconfirm1" id="fconfirm1" value="1" />
-                                            <div class="wpcr_fl"><input type="checkbox" name="' . $rand_prefixes[7] . '-fconfirm2" id="fconfirm2" value="1" /></div><div class="wpcr_fl" style="margin:-2px 0px 0px 5px"><label for="fconfirm2">Check this box to confirm you are human.</label></div>
-                                            <div class="wpcr_clear"></div>
-                                            <input type="checkbox" name="' . $rand_prefixes[8] . '-fconfirm3" id="fconfirm3" value="1" />
-                                        </td>
-                                    </tr>
-                                    <tr><td colspan="2"><input id="wpcr_submit_btn" name="submitwpcr_' . $post->ID . '" type="submit" value="' . $this->options['submit_button_text'] . '" /></td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </form>';
+                            <tr><td colspan="2"><label for="' . $rand_prefixes[5] . '-ftext" class="comment-field">Review:</label></td></tr>
+                            <tr><td colspan="2"><textarea id="' . $rand_prefixes[5] . '-ftext" name="' . $rand_prefixes[5] . '-ftext" rows="8" cols="50">' . $this->p->ftext . '</textarea></td></tr>
+                            <tr>
+                                <td colspan="2" id="wpcr_check_confirm">
+                                    ' . $some_required . '
+                                    <div class="wpcr_clear"></div>    
+                                    <input type="checkbox" name="' . $rand_prefixes[6] . '-fconfirm1" id="fconfirm1" value="1" />
+                                    <div class="wpcr_fl"><input type="checkbox" name="' . $rand_prefixes[7] . '-fconfirm2" id="fconfirm2" value="1" /></div><div class="wpcr_fl" style="margin:-2px 0px 0px 5px"><label for="fconfirm2">Check this box to confirm you are human.</label></div>
+                                    <div class="wpcr_clear"></div>
+                                    <input type="checkbox" name="' . $rand_prefixes[8] . '-fconfirm3" id="fconfirm3" value="1" />
+                                </td>
+                            </tr>
+                            <tr><td colspan="2"><input id="wpcr_submit_btn" name="submitwpcr_' . $post->ID . '" type="submit" value="' . $this->options['submit_button_text'] . '" /></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </form>';
 
         $out4 = '<hr /></div>';
         $out4 .= '<div class="wpcr_clear wpcr_pb5"></div>';

@@ -56,6 +56,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.3.5 =
+* [Fix] The previous release had broken some of the styles, since it output the reviews outside of their expected container.
+
 = 2.3.4 =
 * [Fix] Theme compatibility updates
 * [Fix] Last characters of the last custom field was being cut off
@@ -89,5 +92,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 2.3.4 =
-Fixes some compatibility issues. Adds some new features.
+= 2.3.5 =
+Important fix from previous release.
