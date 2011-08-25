@@ -875,6 +875,12 @@ class WPCustomerReviews {
     function do_the_content($original_content) {
         global $post;
         
+        $using_shortcode_insert = false;
+        if ($original_content == 'shortcode_insert') {
+            $original_content = '';
+            $using_shortcode_insert = true;
+        }
+        
         $the_content = '';
         $is_active_page = $this->is_active_page();
         
@@ -1272,7 +1278,7 @@ class WPCustomerReviews {
     
     function shortcode_wpcr_insert() {
         $this->force_active_page = 1;
-        return $this->do_the_content('');        
+        return $this->do_the_content('shortcode_insert');        
     }
     
     function shortcode_wpcr_show($atts) {
