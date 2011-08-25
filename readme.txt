@@ -54,6 +54,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.3.8 =
+* [Fix] 2.3.7 had introduced a redirect loop when loaded on a new page with no reviews
+
 = 2.3.7 =
 * [Fix] Admin - Using the enter key with in-place editing of reviews will no longer refresh the page
 * [Fix] A recent update was forcing review pages to always jump to the review form. This has been corrected
@@ -96,5 +99,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 2.3.7 =
+= 2.3.8 =
 Several fixes for compatibility with themes and plugins
