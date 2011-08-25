@@ -29,7 +29,7 @@ class WPCustomerReviewsAdmin
                 /* no auto settings redirect if upgrading */
                 if ( isset($this->p->action) && $this->p->action == 'activate-plugin' ) { return false; }
 
-                $url = $this->parentClass->get_admin_path().'options-general.php?page=wpcr_options';
+                $url = get_admin_url().'options-general.php?page=wpcr_options';
                 $this->parentClass->wpcr_redirect($url);
             }
 	}
@@ -1051,7 +1051,7 @@ class WPCustomerReviewsAdmin
                   foreach ($reviews as $review)
                   {                    
                       $rid = $review->id;
-                      $update_path = $this->parentClass->get_admin_path()."admin-ajax.php?page=wpcr_view_reviews&r=$rid&action=update_field";
+                      $update_path = get_admin_url()."admin-ajax.php?page=wpcr_view_reviews&r=$rid&action=update_field";
                       $hash = md5( strtolower( trim( $review->reviewer_email ) ) );
                       $review->review_title = stripslashes($review->review_title);
                       $review->review_text = stripslashes($review->review_text);

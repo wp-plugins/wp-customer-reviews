@@ -73,7 +73,8 @@ class WPCustomerReviews {
 
     /* keep out of admin file */
     function plugin_settings_link($links) {
-        $settings_link = '<a href="options-general.php?page=wpcr_options"><img src="' . $this->getpluginurl() . 'star.png" />&nbsp;Settings</a>';
+        $url = get_admin_url().'options-general.php?page=wpcr_options';
+        $settings_link = '<a href="'.$url.'"><img src="' . $this->getpluginurl() . 'star.png" />&nbsp;Settings</a>';
         array_unshift($links, $settings_link);
         return $links;
     }
@@ -86,26 +87,6 @@ class WPCustomerReviews {
         global $WPCustomerReviewsAdmin;
         $this->include_admin(); /* include admin functions */
         $WPCustomerReviewsAdmin->wpcr_add_meta_box();
-    }
-    
-    /* keep out of admin file */
-    function get_admin_path() { /* get the real wp-admin path, even if renamed */
-        
-        $admin_path = $_SERVER['REQUEST_URI'];            
-        $admin_path = substr($admin_path, 0, stripos($admin_path,'plugins.php'));
-
-        /* not in plugins.php, try again for admin.php */
-        if ($admin_path === false || $admin_path === '') {
-            $admin_path = $_SERVER['REQUEST_URI'];            
-            $admin_path = substr($admin_path, 0, stripos($admin_path,'admin.php'));
-        }
-        
-        if ($admin_path === false || $admin_path === '') {
-            $wpurl = get_bloginfo('wpurl');
-            $admin_path = trailingslashit($wpurl).'wp-admin/';
-        }
-
-        return $admin_path;
     }
 
     /* forward to admin file */
@@ -1210,7 +1191,7 @@ class WPCustomerReviews {
 
         $wpdb->query($query);
 
-        $admin_link = $this->get_admin_path().'admin.php?page=wpcr_view_reviews';
+        $admin_link = get_admin_url().'admin.php?page=wpcr_view_reviews';
         $admin_link = "Link to admin approval page: $admin_link";
 
         @wp_mail(get_bloginfo('admin_email'), "WP Customer Reviews: New Review Posted on " . date('m/d/Y h:i'), "A new review has been posted for " . $this->options['business_name'] . " via WP Customer Reviews. \n\nYou will need to login to the admin area and approve this review before it will appear on your site.\n\n{$admin_link}");
