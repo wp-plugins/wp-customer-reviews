@@ -52,9 +52,16 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 == Frequently Asked Questions ==
 * If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
 
-* If you have upgraded from a version prior to 2.2.8 and are in a multi-site configuration and lost your reviews, please contact us for the fix or refer to the second part of the first post here: wordpress.org/support/topic/heres-a-fix-for-multisite
-
 == Changelog ==
+
+= 2.3.7 =
+* [Fix] Admin - Using the enter key with in-place editing of reviews will no longer refresh the page
+* [Fix] A recent update was forcing review pages to always jump to the review form. This has been corrected
+* [Fix] Several refactorings to increase compatibility with themes and other plugins
+* [Fix] Plugin now works without causing any NOTICE warnings if E_NOTICE is enabled in PHP configuration
+* [Update] Shortcode implementation has been updated. Any pages using shortcodes will need to be updated to use the new format
+* [Update] The plugin should now handle activation and upgrades better
+* [Update] MANY bug fixes, cleanups, performance fixes, and internal changes
 
 = 2.3.6 =
 * [Fix] 2.3.4 had also broken pagination. This should now be working again.
@@ -89,5 +96,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 2.3.5 =
-Important fix from previous release.
+= 2.3.7 =
+Several fixes for compatibility with themes and plugins

@@ -1,5 +1,12 @@
 jQuery(document).ready(function() {
     
+    jQuery("#comments-form").submit(function(e) {
+       var hasbip = jQuery(this).find('input.bip');
+       if (hasbip.size() > 0) {
+           return false;
+       }
+    });
+    
     jQuery(".best_in_place").best_in_place();
     
     jQuery("#require_fname, #show_fname").click(function(){
@@ -411,7 +418,7 @@ BestInPlaceEditor.prototype = {
     self.objectName    = self.element.attr("data-object")       || self.objectName;
     self.attributeName = self.element.attr("data-attribute")    || self.attributeName;
     self.activator     = self.element.attr("data-activator")    || self.element;
-    self.nil           = self.element.attr("data-nil")          || self.nil      || "-";
+    self.nil           = self.element.attr("data-nil")          || self.nil      || "----------";
     self.callback      = self.element.attr("data-callback")     || self.callback || "";
 
     if (!self.element.attr("data-sanitize")) {
@@ -508,7 +515,7 @@ BestInPlaceEditor.forms = {
   "input" : {
     activateForm : function() {
       var output = '<form class="form_in_place" action="javascript:void(0)" style="display:inline;">';
-      output += '<input type="text" value="' + this.sanitizeValue(this.oldValue) + '"></form>';
+      output += '<input class="bip" type="text" value="' + this.sanitizeValue(this.oldValue) + '"></form>';
       this.element.html(output);
       this.element.find('input')[0].select();
       this.element.find("form").bind('submit', {editor: this}, BestInPlaceEditor.forms.input.submitHandler);
@@ -526,11 +533,16 @@ BestInPlaceEditor.forms = {
 
     submitHandler : function(event) {
       event.data.editor.update();
+      return false;
     },
 
     keyupHandler : function(event) {
       if (event.keyCode == 27) {
         event.data.editor.abort();
+      }
+      
+      if (event.keyCode == 10 || event.keyCode == 13) {
+          event.data.editor.update();
       }
     }
   },

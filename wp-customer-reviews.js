@@ -16,12 +16,12 @@ function wpcr_del_cookie(name) {
 }
 
 function wpcr_jump_to() {
-	jQuery(document).ready(function(){
-		window.location.hash="wpcr_respond_1";
-	});
+    jQuery(document).ready(function(){
+        window.location.hash="wpcr_respond_1";
+    });
 }
 
-function valwpcrform_2(newid,oldid,err) {  
+function valwpcrform_2(newid,oldid,err) {
     
     var myval = '';
     
@@ -106,7 +106,7 @@ function wpcr_set_hover() {
     wpcr_onhover();
 }
 
-function wpcr_onhover() {
+function wpcr_onhover() {    
     jQuery("#wpcr_commentform .wpcr_rating").unbind("click",wpcr_set_hover);
     jQuery("#wpcr_commentform .base").hide();
     jQuery("#wpcr_commentform .status").show();
@@ -124,8 +124,9 @@ function wpcr_showform() {
     jQuery("#wpcr_table_2").find("input:text:visible:first").focus();
 }
 
-jQuery(document).ready(function(){
-    jQuery("#wpcr_button_1").click(wpcr_showform);
+function wpcr_init() {
+    
+    jQuery("#wpcr_button_1").click(wpcr_showform);    
     jQuery("#wpcr_commentform").submit(valwpcrform);
 
     jQuery("#wpcr_commentform .wpcr_rating a").click(function(e) {
@@ -145,4 +146,6 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#wpcr_commentform .wpcr_rating").bind("mouseover",wpcr_onhover);
-});
+}
+
+jQuery(document).ready(wpcr_init);

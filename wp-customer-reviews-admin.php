@@ -9,7 +9,7 @@ class WPCustomerReviewsAdmin
             /* begin - haxish but it works */
             $this->parentClass = &$parentClass;
             foreach ($this->parentClass as $col => $val) {
-                    $this->$col = &$this->parentClass->$col;
+                $this->$col = &$this->parentClass->$col;
             }
             /* end - haxish but it works */
 	}
@@ -23,18 +23,11 @@ class WPCustomerReviewsAdmin
             if (get_option('wpcr_gotosettings', false)) {
                 delete_option('wpcr_gotosettings');
 
-                if ($this->p->action == 'activate-plugin') { return false; } /* no auto settings redirect if upgrading */
+                /* no auto settings redirect if upgrading */
+                if ( isset($this->p->action) && $this->p->action == 'activate-plugin' ) { return false; }
 
-                $url = $this->get_admin_path().'options-general.php?page=wpcr_options';
-
-                if (headers_sent() == true) {
-                        echo $this->parentClass->js_redirect($url); /* use JS redirect */
-                } else {
-                        ob_end_clean();
-                        wp_redirect($url); /* nice redirect */
-                }
-
-                exit();
+                $url = $this->parentClass->get_admin_path().'options-general.php?page=wpcr_options';
+                $this->parentClass->wpcr_redirect($url);
             }
 	}
 	
@@ -196,47 +189,37 @@ class WPCustomerReviewsAdmin
 		echo '</table>';
 	}
 	
-	function createReviewTable() {	
-        require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );        
-        dbDelta("CREATE TABLE IF NOT EXISTS `$this->dbtable` (
-                  `id` int(11) NOT NULL AUTO_INCREMENT,
-                  `date_time` datetime NOT NULL,
-                  `reviewer_name` varchar(50) DEFAULT NULL,
-                  `reviewer_email` varchar(50) DEFAULT NULL,
-                  `reviewer_ip` varchar(15) DEFAULT NULL,
-                  `review_title` varchar(150) DEFAULT NULL,
-                  `review_text` text,
-                  `review_response` text,
-                  `status` tinyint(1) DEFAULT '0',
-                  `review_rating` tinyint(2) DEFAULT '0',
-                  `reviewer_url` varchar(255) NOT NULL,
-                  `page_id` int(11) NOT NULL DEFAULT '0',
-                  `custom_fields` text,
-                  PRIMARY KEY (`id`),
-                  KEY `status` (`status`),
-                  KEY `page_id` (`page_id`)
-                ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;");
+	function createUpdateReviewTable() {
+            require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );
+            
+            $sql = "CREATE TABLE $this->dbtable (
+                      id int(11) NOT NULL AUTO_INCREMENT,
+                      date_time datetime NOT NULL,
+                      reviewer_name varchar(150) DEFAULT NULL,
+                      reviewer_email varchar(150) DEFAULT NULL,
+                      reviewer_ip varchar(15) DEFAULT NULL,
+                      review_title varchar(150) DEFAULT NULL,
+                      review_text text,
+                      review_response text,
+                      status tinyint(1) DEFAULT '0',
+                      review_rating tinyint(2) DEFAULT '0',
+                      reviewer_url varchar(255) NOT NULL,
+                      page_id int(11) NOT NULL DEFAULT '0',
+                      custom_fields text,
+                      PRIMARY KEY (id),
+                      KEY status (status),
+                      KEY page_id (page_id)
+                      )";
+            
+            dbDelta($sql);
         }
-
-	function get_admin_path() { /* get the real wp-admin path, even if renamed */
-		$admin_path = $_SERVER['REQUEST_URI'];            
-		$admin_path = substr($admin_path, 0, stripos($admin_path,'plugins.php'));
-		
-		/* not in plugins.php, try again for admin.php */
-		if ($admin_path === false || $admin_path === '') {
-			$admin_path = $_SERVER['REQUEST_URI'];            
-			$admin_path = substr($admin_path, 0, stripos($admin_path,'admin.php'));
-		}
-		
-		return $admin_path;
-	}
 	
 	function force_update_cache() {
         /* update pages we are using, this will force it to update with caching plugins */
 
             global $wpdb;
 
-            $pages = $wpdb->get_results( "SELECT `ID` FROM $wpdb->posts AS p, $wpdb->postmeta AS pm
+            $pages = $wpdb->get_results( "SELECT `ID` FROM $wpdb->posts AS `p`, $wpdb->postmeta AS `pm`
                                             WHERE p.ID = pm.post_id
                                             AND pm.meta_key = 'wpcr_enable' AND pm.meta_value = 1" );
 
@@ -278,11 +261,15 @@ class WPCustomerReviewsAdmin
 	
      /* 
      * This is used purely for analytics and for notification of critical security releases.
-     * And it gives us a chance to review who is using it and to verify theme and version compatibility
-     * None of this information will ever be shared, sold, or given away.
-     */ 
+     * It gives us a chance to review who is using it, how it is being used, 
+     * and to verify theme and version compatibility. None of this information will ever be 
+     * shared, sold, or given away.
+     */
     function notify_activate($act_flag) {
         global $wp_version;
+        
+        /* TO DISABLE THIS FUNCTION, UNCOMMENT THE FOLLOWING LINE */
+        /* return false; */
 		
         if ($this->options['act_uniq'] == '') {
             $this->options['act_uniq'] = $this->gen_uuid();
@@ -315,7 +302,7 @@ class WPCustomerReviewsAdmin
         return $response;
     }
 	
-	function update_options() {
+    function update_options() {
         global $wpdb;
         $msg ='';
                 
@@ -323,12 +310,12 @@ class WPCustomerReviewsAdmin
         {        			
             if ($this->options['activate'] == 0)
             {
-                    $this->options['activate'] = 1;
-                    $this->options['act_email'] = $this->p->email;
+                $this->options['activate'] = 1;
+                $this->options['act_email'] = $this->p->email;
 
-                    update_option('wpcr_options', $this->options);
-                    $this->notify_activate(1);
-                    $msg = 'Thank you. Please configure the plugin below.';
+                update_option('wpcr_options', $this->options);
+                $this->notify_activate(1);
+                $msg = 'Thank you. Please configure the plugin below.';
             }
         }
         else
@@ -434,7 +421,7 @@ class WPCustomerReviewsAdmin
     function my_get_pages() { /* gets pages, even if hidden using a plugin */
         global $wpdb;
         
-        $res = $wpdb->get_results("select ID, post_title from ". $wpdb->posts ." where post_status = 'publish' and post_type = 'page' order by ID");
+        $res = $wpdb->get_results("SELECT `ID`,`post_title` FROM `$wpdb->posts` WHERE `post_status` = 'publish' AND `post_type` = 'page' ORDER BY `ID`");
         return $res;
     }
 	
@@ -481,11 +468,13 @@ class WPCustomerReviewsAdmin
                     <legend>Tips</legend>
                 </div>
                 <div style="padding:10px;">
+                    How to use: <small>When adding/editing any post/page, you have a setting block on the page for WP Customer Reviews. If you enable the plugin for that post, it will then use the default options set on this page.</small>
+                    <br /><br />
                     Shortcodes: <small>The following shortcodes can be used in the page/post content of any page. These codes will not work when placed directly in a theme template file, since Wordpress does not parse their content. Shortcode features are in beta testing.</small>
                     <br /><br />
                     [WPCR_INSERT] <small>is available for you to use on any page/post. Simply include [WPCR_INSERT] in the content of the post where you would like the reviews/form output to be displayed. If this code is found, the plugin will automatically enable itself for the post.</small>
                     <br /><br />
-                    [WPCR_SHOW=ALL,<span style="color:#00c;">3</span>] <small>is available to show the latest <span style="color:#00c;">3</span> reviews from all pages, or use [WPCR_SHOW=<span style="color:#00c;">ID</span>,<span style="color:#00c;">5</span>] , where <span style="color:#00c;">ID</span> is the ID of the page/post whose reviews you want to display and <span style="color:#00c;">5</span> is how many reviews should be displayed. An example would be to use this in the sidebar contents of a page, or maybe on the homepage. For this to work in a sidebar, the sidebar contents would need to be setup as a page, so the code can be inserted.</small>
+                    [WPCR_SHOW POSTID="<span style="color:#090;">ALL</span>" NUM="<span style="color:#00c;">3</span>"] <small>is available to show the latest <span style="color:#009;">3</span> reviews from <span style="color:#090;">ALL</span> pages, or use POSTID="<span style="color:#090;">123</span>" to show reviews from post/page ID #<span style="color:#090;">123</span>. An example would be to use this in the sidebar contents of a page, or maybe on the homepage.</small>
                 </div>
                 <form method="post" action="">
                     <div style="background:#eaf2fa;padding:6px;border-top:1px solid #ccc;border-bottom:1px solid #ccc;">
@@ -580,16 +569,20 @@ class WPCustomerReviewsAdmin
                         <div style="font-size:10px;padding-top:6px;">
                         ';
                         for ($i = 0; $i < 6; $i++) /* 6 custom fields */
-                        {						
-                                if ($this->options['ask_custom'][$i] == 1) { $caf = 'checked'; } else { $caf = ''; }
-                                if ($this->options['require_custom'][$i] == 1) { $crf = 'checked'; } else { $crf = ''; }
-                                if ($this->options['show_custom'][$i] == 1) { $csf = 'checked'; } else { $csf = ''; }
-                                echo '
-                                <label for="field_custom'.$i.'">Field Name: </label><input id="field_custom'.$i.'" name="field_custom['.$i.']" type="text" value="'.$this->options['field_custom'][$i].'" />&nbsp;&nbsp;&nbsp;
-                                <input '.$caf.' class="custom_ask" data-id="'.$i.'" id="ask_custom'.$i.'" name="ask_custom['.$i.']" type="checkbox" value="1" />&nbsp;<label for="ask_custom'.$i.'">Ask</label>&nbsp;&nbsp;&nbsp;
-                                <input '.$crf.' class="custom_req" data-id="'.$i.'" id="require_custom'.$i.'" name="require_custom['.$i.']" type="checkbox" value="1" />&nbsp;<label for="require_custom'.$i.'">Require</label>&nbsp;&nbsp;&nbsp;
-                                <input '.$csf.' class="custom_show" data-id="'.$i.'" id="show_custom'.$i.'" name="show_custom['.$i.']" type="checkbox" value="1" />&nbsp;<label for="show_custom'.$i.'">Show</label><br />
-                                ';
+                        {
+                            if ( !isset($this->options['ask_custom'][$i]) ) { $this->options['ask_custom'][$i] = 0; }
+                            if ( !isset($this->options['require_custom'][$i]) ) { $this->options['require_custom'][$i] = 0; }
+                            if ( !isset($this->options['show_custom'][$i]) ) { $this->options['show_custom'][$i] = 0; }
+                            
+                            if ($this->options['ask_custom'][$i] == 1) { $caf = 'checked'; } else { $caf = ''; }
+                            if ($this->options['require_custom'][$i] == 1) { $crf = 'checked'; } else { $crf = ''; }
+                            if ($this->options['show_custom'][$i] == 1) { $csf = 'checked'; } else { $csf = ''; }
+                            echo '
+                            <label for="field_custom'.$i.'">Field Name: </label><input id="field_custom'.$i.'" name="field_custom['.$i.']" type="text" value="'.$this->options['field_custom'][$i].'" />&nbsp;&nbsp;&nbsp;
+                            <input '.$caf.' class="custom_ask" data-id="'.$i.'" id="ask_custom'.$i.'" name="ask_custom['.$i.']" type="checkbox" value="1" />&nbsp;<label for="ask_custom'.$i.'">Ask</label>&nbsp;&nbsp;&nbsp;
+                            <input '.$crf.' class="custom_req" data-id="'.$i.'" id="require_custom'.$i.'" name="require_custom['.$i.']" type="checkbox" value="1" />&nbsp;<label for="require_custom'.$i.'">Require</label>&nbsp;&nbsp;&nbsp;
+                            <input '.$csf.' class="custom_show" data-id="'.$i.'" id="show_custom'.$i.'" name="show_custom['.$i.']" type="checkbox" value="1" />&nbsp;<label for="show_custom'.$i.'">Show</label><br />
+                            ';
                         }
                         echo '
                         </div>
@@ -639,7 +632,9 @@ class WPCustomerReviewsAdmin
         }
 
         $msg = '';
-        		
+        
+        if (!isset($this->p->Submit)) { $this->p->Submit = ''; }
+        
         if ($this->p->Submit == 'Save Changes') {
             $msg = $this->update_options();
             $this->parentClass->get_options();
@@ -720,6 +715,12 @@ class WPCustomerReviewsAdmin
 	function real_admin_view_reviews() {        
         global $wpdb;
         
+        if (!isset($this->p->s)) { $this->p->s = ''; }
+        $this->p->s_orig = $this->p->s;
+        
+        if (!isset($this->p->review_status)) { $this->p->review_status = 0; }
+        $this->p->review_status = intval($this->p->review_status);
+        
         /* begin - actions */
         if (isset($this->p->action)) {
 		
@@ -728,16 +729,16 @@ class WPCustomerReviewsAdmin
 
                 switch ($this->p->action) {
                     case 'deletereview':
-                        $wpdb->query("DELETE FROM `$this->dbtable` WHERE id={$this->p->r} LIMIT 1");
+                        $wpdb->query("DELETE FROM `$this->dbtable` WHERE `id`={$this->p->r} LIMIT 1");
                         break;
                     case 'trashreview':
-                        $wpdb->query("UPDATE `$this->dbtable` SET status=2 WHERE id={$this->p->r} LIMIT 1");
+                        $wpdb->query("UPDATE `$this->dbtable` SET `status`=2 WHERE `id`={$this->p->r} LIMIT 1");
                         break;
                     case 'approvereview':
-                        $wpdb->query("UPDATE `$this->dbtable` SET status=1 WHERE id={$this->p->r} LIMIT 1");
+                        $wpdb->query("UPDATE `$this->dbtable` SET `status`=1 WHERE `id`={$this->p->r} LIMIT 1");
                         break;
                     case 'unapprovereview':
-                        $wpdb->query("UPDATE `$this->dbtable` SET status=0 WHERE id={$this->p->r} LIMIT 1");
+                        $wpdb->query("UPDATE `$this->dbtable` SET `status`=0 WHERE `id`={$this->p->r} LIMIT 1");
                         break;
                     case 'update_field':
                         
@@ -786,7 +787,7 @@ class WPCustomerReviewsAdmin
                                         $custom_count = count($this->options['field_custom']); /* used for insert as well */
                                         for ($i = 0; $i < $custom_count; $i++)
                                         {
-                                                $custom_fields[$i] = $this->options['field_custom'][$i];
+                                            $custom_fields[$i] = $this->options['field_custom'][$i];
                                         }
 
                                         $custom_num = substr($col,7); /* gets the number after the _ */
@@ -827,7 +828,7 @@ class WPCustomerReviewsAdmin
                 }
             }
 			
-            if (is_array($this->p->delete_reviews) && count($this->p->delete_reviews)) {
+            if ( isset($this->p->delete_reviews) && is_array($this->p->delete_reviews) && count($this->p->delete_reviews) ) {
                 
                 foreach ($this->p->delete_reviews as $i => $rid) {
                     $this->p->delete_reviews[$i] = intval($rid);
@@ -837,29 +838,24 @@ class WPCustomerReviewsAdmin
 				
                 switch ($this->p->action) {
                     case 'bapprove':
-                        $wpdb->query("UPDATE `$this->dbtable` SET status=1 WHERE id IN(".implode(',',$this->p->delete_reviews).")");
+                        $wpdb->query("UPDATE `$this->dbtable` SET `status`=1 WHERE `id` IN(".implode(',',$this->p->delete_reviews).")");
                         break;
                     case 'bunapprove':
-                        $wpdb->query("UPDATE `$this->dbtable` SET status=0 WHERE id IN(".implode(',',$this->p->delete_reviews).")");
+                        $wpdb->query("UPDATE `$this->dbtable` SET `status`=0 WHERE `id` IN(".implode(',',$this->p->delete_reviews).")");
                         break;
                     case 'btrash':
-                        $wpdb->query("UPDATE `$this->dbtable` SET status=2 WHERE id IN(".implode(',',$this->p->delete_reviews).")");
+                        $wpdb->query("UPDATE `$this->dbtable` SET `status`=2 WHERE `id` IN(".implode(',',$this->p->delete_reviews).")");
                         break;
                     case 'bdelete':
-                        $wpdb->query("DELETE FROM `$this->dbtable` WHERE id IN(".implode(',',$this->p->delete_reviews).")");
+                        $wpdb->query("DELETE FROM `$this->dbtable` WHERE `id` IN(".implode(',',$this->p->delete_reviews).")");
                         break;
                 }
             }
 			
-            $this->force_update_cache(); /* update any caches */
-		            
-            echo $this->parentClass->js_redirect("?page=wpcr_view_reviews&review_status={$this->p->review_status}");
-            exit();
+            $this->force_update_cache(); /* update any caches */            
+            $this->parentClass->wpcr_redirect("?page=wpcr_view_reviews&review_status={$this->p->review_status}");
         }
         /* end - actions */
-        
-        if (!isset($this->p->review_status)) { $this->p->review_status = 0; }
-        $this->p->review_status = intval($this->p->review_status);
         
         /* begin - searching */
         if ($this->p->review_status == -1) {
@@ -868,30 +864,29 @@ class WPCustomerReviewsAdmin
             $sql_where = 'status='.$this->p->review_status;
         }
         
-        $this->p->s_orig = $this->p->s;
         $and_clause = '';
-        if ($this->p->s) { /* searching */
+        if ($this->p->s != '') { /* searching */
             $this->p->s = '%'.$this->p->s.'%';
             $sql_where = '-1=-1';
             $this->p->review_status = -1;
-            $and_clause = "AND (reviewer_name LIKE %s OR reviewer_email LIKE %s OR reviewer_ip LIKE %s OR review_text LIKE %s OR review_response LIKE %s OR reviewer_url LIKE %s)";
+            $and_clause = "AND (`reviewer_name` LIKE %s OR `reviewer_email` LIKE %s OR `reviewer_ip` LIKE %s OR `review_text` LIKE %s OR `review_response` LIKE %s OR `reviewer_url` LIKE %s)";
             $and_clause = $wpdb->prepare($and_clause,$this->p->s,$this->p->s,$this->p->s,$this->p->s,$this->p->s,$this->p->s);
             
             $query = "SELECT 
-                id,
-                date_time,
-                reviewer_name,
-                reviewer_email,
-                reviewer_ip,
-                review_title,
-                review_text,
-                review_response,
-                review_rating,
-                reviewer_url,
-                status,
-                page_id,
-                custom_fields
-                FROM `$this->dbtable` WHERE $sql_where $and_clause ORDER BY id DESC"; 
+                `id`,
+                `date_time`,
+                `reviewer_name`,
+                `reviewer_email`,
+                `reviewer_ip`,
+                `review_title`,
+                `review_text`,
+                `review_response`,
+                `review_rating`,
+                `reviewer_url`,
+                `status`,
+                `page_id`,
+                `custom_fields`
+                FROM `$this->dbtable` WHERE $sql_where $and_clause ORDER BY `id` DESC"; 
             
             $reviews = $wpdb->get_results($query);
             $total_reviews = 0; /* no pagination for searches */
@@ -899,7 +894,7 @@ class WPCustomerReviewsAdmin
         /* end - searching */
         else
         {
-            $arr_Reviews = $this->parentClass->get_reviews(-1,$this->page,$this->options['reviews_per_page'],$this->p->review_status);
+            $arr_Reviews = $this->parentClass->get_reviews(-1,$this->page,10,$this->p->review_status);
             $reviews = $arr_Reviews[0];
             $total_reviews = $arr_Reviews[1];
         }
@@ -921,13 +916,13 @@ class WPCustomerReviewsAdmin
                 break;
         }
         
-        $pending_count = $wpdb->get_results("SELECT COUNT(*) AS count_pending FROM `$this->dbtable` WHERE status=0");
+        $pending_count = $wpdb->get_results("SELECT COUNT(*) AS `count_pending` FROM `$this->dbtable` WHERE `status`=0");
         $pending_count = $pending_count[0]->count_pending;
 		
-        $approved_count = $wpdb->get_results("SELECT COUNT(*) AS count_approved FROM `$this->dbtable` WHERE status=1");
+        $approved_count = $wpdb->get_results("SELECT COUNT(*) AS `count_approved` FROM `$this->dbtable` WHERE `status`=1");
         $approved_count = $approved_count[0]->count_approved;
 
-        $trash_count = $wpdb->get_results("SELECT COUNT(*) AS count_trash FROM `$this->dbtable` WHERE status=2");
+        $trash_count = $wpdb->get_results("SELECT COUNT(*) AS `count_trash` FROM `$this->dbtable` WHERE `status`=2");
         $trash_count = $trash_count[0]->count_trash;
         ?>
         <div id="wpcr_respond_1" class="wrap">
@@ -1001,7 +996,7 @@ class WPCustomerReviewsAdmin
                   foreach ($reviews as $review)
                   {                    
                       $rid = $review->id;
-                      $update_path = $this->get_admin_path()."admin-ajax.php?page=wpcr_view_reviews&r=$rid&action=update_field";
+                      $update_path = $this->parentClass->get_admin_path()."admin-ajax.php?page=wpcr_view_reviews&r=$rid&action=update_field";
                       $hash = md5( strtolower( trim( $review->reviewer_email ) ) );
                       $review->review_title = stripslashes($review->review_title);
                       $review->review_text = stripslashes($review->review_text);
@@ -1033,10 +1028,12 @@ class WPCustomerReviewsAdmin
                                 for ($i = 0; $i < $custom_count; $i++)
                                 {
                                     $custom_field_name = $this->options['field_custom'][$i];
-                                    $custom_value = $custom_unserialized[$custom_field_name];
-                                    if ($custom_value != '')
-                                    {
-                                        echo "$custom_field_name: <span class='best_in_place' data-url='$update_path' data-object='json' data-attribute='custom_$i'>$custom_value</span><br />";
+                                    if ( isset($custom_unserialized[$custom_field_name]) ) {
+                                        $custom_value = $custom_unserialized[$custom_field_name];
+                                        if ($custom_value != '')
+                                        {
+                                            echo "$custom_field_name: <span class='best_in_place' data-url='$update_path' data-object='json' data-attribute='custom_$i'>$custom_value</span><br />";
+                                        }
                                     }
                                 }
                             }
@@ -1048,9 +1045,7 @@ class WPCustomerReviewsAdmin
                                      data-object='json'
                                      data-attribute='review_rating' 
                                      data-callback='make_stars_from_rating'
-                                     data-type='select'>
-                                    <?php echo $this->parentClass->output_rating($review->review_rating,false); ?>
-                                </div>
+                                     data-type='select'><?php echo $this->parentClass->output_rating($review->review_rating,false); ?></div>
                             </div>
                         </td>
                         <td class="comment column-comment">
@@ -1061,6 +1056,7 @@ class WPCustomerReviewsAdmin
                             <?php if ($review->status == 1) : ?>[<a target="_blank" href="<?php echo trailingslashit( get_permalink( $review->page_id ) ); ?>?wpcrp=<?php echo $this->page; ?>#hreview-<?php echo $rid;?>">View Review on Page</a>]<?php endif; ?>
                           </div>
                           <p>
+                              <span style="font-size:13px;font-weight:bold;">Title:&nbsp;</span>
                               <span style="font-size:14px; font-weight:bold;" 
                                     class="best_in_place" 
                                     data-url='<?php echo $update_path; ?>' 
@@ -1076,7 +1072,7 @@ class WPCustomerReviewsAdmin
                              <div style="font-size:13px;font-weight:bold;">
                                  <br />
                                  Official Response:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                 <span style="font-size:11px;font-style:italic;">Leave this entry blank if you do not want to show on frontend</span>
+                                 <span style="font-size:11px;font-style:italic;">Leave this blank if you do not want it to be public</span>
                              </div>
                              <div class="best_in_place" 
                                     data-url='<?php echo $update_path; ?>'
@@ -1118,7 +1114,7 @@ class WPCustomerReviewsAdmin
                       </select>&nbsp;
                       <input type="submit" class="button-secondary apply" name="act2" value="Apply" id="doaction2" />
                 </div>
-                <div class="alignleft actions" style="float:left;padding-left:20px;"><?php echo $this->parentClass->pagination($total_reviews); ?></div>  
+                <div class="alignleft actions" style="float:left;padding-left:20px;"><?php echo $this->parentClass->pagination($total_reviews, 10); ?></div>  
                 <br class="clear" />
               </div>
             </form>

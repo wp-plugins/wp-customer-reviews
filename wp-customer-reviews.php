@@ -3,8 +3,8 @@
  * Plugin Name: WP Customer Reviews
  * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.3.6
- * Revision Date: August 21, 2011
+ * Version: 2.3.7
+ * Revision Date: August 25, 2011
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.3
  * Author: Go Web Solutions
@@ -29,20 +29,33 @@
 
 class WPCustomerReviews {
 
-    var $plugin_version = '2.3.6';
     var $dbtable = 'wpcreviews';
-    var $options = array();
+    var $force_active_page = false;
     var $got_aggregate = false;
-    var $shown_hcard = false;
+    var $options = array();
     var $p = '';
     var $page = 1;
+    var $plugin_version = '0.0.0';
+    var $shown_form = false;
+    var $shown_hcard = false;
+    var $status_msg = '';
 
     function WPCustomerReviews() {
         global $wpdb;
 
         define('IN_WPCR', 1);
+        
+        /* uncomment the below block to display strict/notice errors */
+        /*
+        restore_error_handler();
+        error_reporting(E_ALL);
+        ini_set('error_reporting', E_ALL);
+        ini_set('html_errors',TRUE);
+        ini_set('display_errors',TRUE);
+        */
 
         $this->dbtable = $wpdb->prefix . $this->dbtable;
+        $this->plugin_version = $this->plugin_get_version();
 
         add_action('the_content', array(&$this, 'do_the_content'), 10); /* 10 prevents a conflict with some odd themes */
         add_action('init', array(&$this, 'init'));
@@ -58,7 +71,6 @@ class WPCustomerReviews {
     }
 
     /* keep out of admin file */
-
     function plugin_settings_link($links) {
         $settings_link = '<a href="options-general.php?page=wpcr_options"><img src="' . $this->getpluginurl() . 'star.png" />&nbsp;Settings</a>';
         array_unshift($links, $settings_link);
@@ -66,7 +78,6 @@ class WPCustomerReviews {
     }
 
     /* keep out of admin file */
-
     function addmenu() {
         add_options_page('Customer Reviews', '<img src="' . $this->getpluginurl() . 'star.png" />&nbsp;Customer Reviews', 'manage_options', 'wpcr_options', array(&$this, 'admin_options'));
         add_menu_page('Customer Reviews', 'Customer Reviews', 'edit_others_posts', 'wpcr_view_reviews', array(&$this, 'admin_view_reviews'), $this->getpluginurl() . 'star.png', 50); /* 50 should be underneath comments */
@@ -75,9 +86,28 @@ class WPCustomerReviews {
         $this->include_admin(); /* include admin functions */
         $WPCustomerReviewsAdmin->wpcr_add_meta_box();
     }
+    
+    /* keep out of admin file */
+    function get_admin_path() { /* get the real wp-admin path, even if renamed */
+        
+        $admin_path = $_SERVER['REQUEST_URI'];            
+        $admin_path = substr($admin_path, 0, stripos($admin_path,'plugins.php'));
+
+        /* not in plugins.php, try again for admin.php */
+        if ($admin_path === false || $admin_path === '') {
+            $admin_path = $_SERVER['REQUEST_URI'];            
+            $admin_path = substr($admin_path, 0, stripos($admin_path,'admin.php'));
+        }
+        
+        if ($admin_path === false || $admin_path === '') {
+            $wpurl = get_bloginfo('wpurl');
+            $admin_path = trailingslashit($wpurl).'wp-admin/';
+        }
+
+        return $admin_path;
+    }
 
     /* forward to admin file */
-
     function admin_options() {
         global $WPCustomerReviewsAdmin;
         $this->include_admin(); /* include admin functions */
@@ -85,7 +115,6 @@ class WPCustomerReviews {
     }
 
     /* forward to admin file */
-
     function admin_save_post($post_id, $post) {
         global $WPCustomerReviewsAdmin;
         $this->include_admin(); /* include admin functions */
@@ -93,11 +122,18 @@ class WPCustomerReviews {
     }
 
     /* forward to admin file */
-
     function admin_view_reviews() {
         global $WPCustomerReviewsAdmin;
         $this->include_admin(); /* include admin functions */
         $WPCustomerReviewsAdmin->real_admin_view_reviews();
+    }
+    
+    /* returns current plugin version */
+    function plugin_get_version() {
+        require_once( ABSPATH . 'wp-admin/includes/plugin.php');
+        $plugin_data = get_plugin_data( __FILE__ );
+        $plugin_version = $plugin_data['Version'];
+        return $plugin_version;
     }
 
     function get_options() {
@@ -194,6 +230,10 @@ class WPCustomerReviews {
         if ($current_dbversion == $plugin_db_version) {
             return false;
         }
+        
+        global $WPCustomerReviewsAdmin;
+        $this->include_admin(); /* include admin functions */
+        $WPCustomerReviewsAdmin->createUpdateReviewtable(); /* creates AND updates table */
 
         /* initial installation */
         if ($current_dbversion == 0) {
@@ -208,9 +248,6 @@ class WPCustomerReviews {
         /* upgrade to 2.0.0 */
         if ($current_dbversion < 200) {
             /* add multiple page support to database */
-            /* using one query per field to prevent errors if a field already exists */
-            $wpdb->query("ALTER TABLE `$this->dbtable` ADD `page_id` INT(11) NOT NULL DEFAULT '0', ADD INDEX ( `page_id` )");
-            $wpdb->query("ALTER TABLE `$this->dbtable` ADD `custom_fields` text");
 
             /* change all current reviews to use the selected page id */
             $pageID = intval($this->options['selected_pageid']);
@@ -221,19 +258,6 @@ class WPCustomerReviews {
 
             $this->options['dbversion'] = 200;
             $current_dbversion = 200;
-            update_option('wpcr_options', $this->options);
-            $migrated = true;
-        }
-        
-        /* upgrade to 2.3.4 */
-        if ($current_dbversion < 234) {
-            /* add admin review response to database, extends some fields */
-            $wpdb->query("ALTER TABLE `$this->dbtable` ADD `review_response` text");
-            $wpdb->query("ALTER TABLE `$this->dbtable` CHANGE `reviewer_name` `reviewer_name` VARCHAR( 150 )");
-            $wpdb->query("ALTER TABLE `$this->dbtable` CHANGE `reviewer_email` `reviewer_email` VARCHAR( 150 )");
-            
-            $this->options['dbversion'] = 234;
-            $current_dbversion = 234;
             update_option('wpcr_options', $this->options);
             $migrated = true;
         }
@@ -258,6 +282,11 @@ class WPCustomerReviews {
     function is_active_page() {
         global $post;
         
+        $has_shortcode = $this->force_active_page;
+        if ( $has_shortcode !== false ) {
+            return 'shortcode';
+        }
+        
         if ( !isset($post) || !isset($post->ID) || intval($post->ID) == 0 ) {
             return false; /* we can only use the plugin if we have a valid post ID */
         }
@@ -266,13 +295,8 @@ class WPCustomerReviews {
             return false; /* not on a single post/page view */
         }
         
-        $has_shortcode = strpos($post->post_content,'[WPCR_INSERT]');
-        if ( $has_shortcode !== false ) {
-            return 'shortcode';
-        }
-        
-        $is_active_page = get_post_meta($post->ID, 'wpcr_enable', true);
-        if ( $is_active_page ) {
+        $wpcr_enabled_post = get_post_meta($post->ID, 'wpcr_enable', true);
+        if ( $wpcr_enabled_post ) {
             return 'enabled';
         }
         
@@ -280,47 +304,48 @@ class WPCustomerReviews {
     }
     
     function add_style() {
-        if (!$this->is_active_page()) { return; }
-        
+        /* to prevent compatibility issues and for shortcodes, add to every page */
         wp_enqueue_style('wp-customer-reviews');
     }
     
-    function add_script() {
-        if (!$this->is_active_page()) { return; }
-        
-        global $post;
-                
+    function add_script() {                
+        /* to prevent compatibility issues and for shortcodes, add to every page */
         wp_enqueue_script('wp-customer-reviews');
         
         /* do this here so we can redirect cleanly */
+        
+        global $post;
+        if (!isset($post) || !isset($post->ID)) {
+            $post = new stdClass();
+            $post->ID = 0;
+        }
+        
+        if (isset($_COOKIE['wpcr_status_msg'])) {
+            $this->status_msg = $_COOKIE['wpcr_status_msg'];
+            if ( !headers_sent() ) {
+                setcookie('wpcr_status_msg', '', time() - 3600); /* delete the cookie */
+                unset($_COOKIE['wpcr_status_msg']);
+            }
+        }
+        
+        /* do this here so we can redirect cleanly */
+        
         $GET_P = "submitwpcr_$post->ID";
 
-        if (isset($this->p->$GET_P) && $this->p->$GET_P == $this->options['submit_button_text'])
+        if ($post->ID > 0 && isset($this->p->$GET_P) && $this->p->$GET_P == $this->options['submit_button_text'])
         {
             $msg = $this->add_review($post->ID);
-
             $has_error = $msg[0];
             $status_msg = $msg[1];
-            $cookie = array('wpcr_status_msg' => $status_msg);
-
             $url = get_permalink($post->ID);
-
-            if (headers_sent() == true) {
-                echo $this->js_redirect($url, $cookie); /* use JS redirect and add cookie before redirect */
-            } else {
-                foreach ($cookie as $col => $val) {
-                    setcookie($col, $val); /* add cookie via headers */
-                }
-                ob_end_clean();
-                wp_redirect($url); /* nice redirect */
-            }
-
-            exit();
+            $cookie = array('wpcr_status_msg' => $status_msg);
+            $this->wpcr_redirect($url, $cookie);
         }
     }
     
     function rand_string($length) {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        $str = '';
 
         $size = strlen($chars);
         for ($i = 0; $i < $length; $i++) {
@@ -338,7 +363,7 @@ class WPCustomerReviews {
         global $wpdb;
 
         $pageID = intval($pageID);
-        $row = $wpdb->get_results("SELECT COUNT(*) AS total,AVG(review_rating) AS aggregate_rating,MAX(review_rating) AS max_rating FROM `$this->dbtable` WHERE page_id=$pageID AND status=1");
+        $row = $wpdb->get_results("SELECT COUNT(*) AS `total`,AVG(review_rating) AS `aggregate_rating`,MAX(review_rating) AS `max_rating` FROM `$this->dbtable` WHERE `page_id`=$pageID AND `status`=1");
 
         /* make sure we have at least one review before continuing below */
         if ($wpdb->num_rows == 0 || $row[0]->total == 0) {
@@ -350,7 +375,7 @@ class WPCustomerReviews {
         $max_rating = $row[0]->max_rating;
         $total_reviews = $row[0]->total;
 
-        $row = $wpdb->get_results("SELECT review_text FROM `$this->dbtable` WHERE page_id=$pageID AND status=1 ORDER BY date_time DESC LIMIT 1");
+        $row = $wpdb->get_results("SELECT `review_text` FROM `$this->dbtable` WHERE `page_id`=$pageID AND `status`=1 ORDER BY `date_time` DESC LIMIT 1");
         $sample_text = substr($row[0]->review_text, 0, 180);
 
         $this->got_aggregate = array("aggregate" => $aggregate_rating, "max" => $max_rating, "total" => $total_reviews, "text" => $sample_text);
@@ -361,16 +386,14 @@ class WPCustomerReviews {
         global $wpdb;
 
         $startpage = $startpage - 1; /* mysql starts at 0 instead of 1, so reduce them all by 1 */
-        if ($startpage < 0) {
-            $startpage = 0;
-        }
+        if ($startpage < 0) { $startpage = 0; }
 
         $limit = 'LIMIT ' . $startpage * $perpage . ',' . $perpage;
 
         if ($status == -1) {
             $qry_status = '1=1';
         } else {
-            $qry_status = "status=$status";
+            $qry_status = "`status`=$status";
         }
 
         $postID = intval($postID);
@@ -381,29 +404,32 @@ class WPCustomerReviews {
         }
 
         $reviews = $wpdb->get_results("SELECT 
-            id,
-            date_time,
-            reviewer_name,
-            reviewer_email,
-            review_title,
-            review_text,
-            review_response,
-            review_rating,
-            reviewer_url,
-            reviewer_ip,
-            status,
-            page_id,
-            custom_fields
-            FROM `$this->dbtable` WHERE $qry_status $and_post ORDER BY date_time DESC $limit
+            `id`,
+            `date_time`,
+            `reviewer_name`,
+            `reviewer_email`,
+            `review_title`,
+            `review_text`,
+            `review_response`,
+            `review_rating`,
+            `reviewer_url`,
+            `reviewer_ip`,
+            `status`,
+            `page_id`,
+            `custom_fields`
+            FROM `$this->dbtable` WHERE $qry_status $and_post ORDER BY `date_time` DESC $limit
             ");
 
-        $total_reviews = $wpdb->get_results("SELECT COUNT(*) AS total FROM `$this->dbtable` WHERE $qry_status $and_post");
+        $total_reviews = $wpdb->get_results("SELECT COUNT(*) AS `total` FROM `$this->dbtable` WHERE $qry_status $and_post");
         $total_reviews = $total_reviews[0]->total;
 
         return array($reviews, $total_reviews);
     }
 
     function aggregate_footer() {
+        
+        $aggregate_footer_output = '';
+        
         if ($this->options['show_hcard_on'] != 0 && $this->shown_hcard === false) {
 
             $this->shown_hcard = true;
@@ -421,7 +447,7 @@ class WPCustomerReviews {
             /* end - make sure we should continue */
 
             if ($show) { /* we append like this to prevent newlines and wpautop issues */
-                $output2 .= '<div id="wpcr-hcard" class="vcard" style="display:none;">' .
+                $aggregate_footer_output = '<div id="wpcr-hcard" class="vcard" style="display:none;">' .
                         '<a class="url fn org" href="' . $this->options['business_url'] . '">' . $this->options['business_name'] . '</a>' .
                         '<a class="email" href="mailto:' . $this->options['business_email'] . '">' . $this->options['business_email'] . '</a>' .
                         '<span class="adr">' .
@@ -436,7 +462,7 @@ class WPCustomerReviews {
             }
         }
 
-        return $output2;
+        return $aggregate_footer_output;
     }
 
     function iso8601($time=false) {
@@ -446,21 +472,22 @@ class WPCustomerReviews {
         return (substr($date, 0, strlen($date) - 2) . ':' . substr($date, -2));
     }
 
-    function pagination($total_results = 0, $range = 2) {
+    function pagination($total_results, $reviews_per_page) {
         global $post; /* will exist if on a post */
 
         $out = '';
         $uri = false;
         $pretty = false;
 
+        $range = 2;
         $showitems = ($range * 2) + 1;
 
         $paged = $this->page;
-        if ($paged == 0) {
-            $paged = 1;
-        }
+        if ($paged == 0) { $paged = 1; }
+        
+        if (!isset($this->p->review_status)) { $this->p->review_status = 0; }
 
-        $pages = ceil($total_results / $this->options['reviews_per_page']);
+        $pages = ceil($total_results / $reviews_per_page);
 
         if ($pages > 1) {
             if (is_admin()) {
@@ -541,12 +568,11 @@ class WPCustomerReviews {
         /* trying to access a page that does not exists -- send to main page */
         if (isset($this->p->wpcrp) && count($reviews) == 0) {
             $url = get_permalink($postid);
-            $the_content = $this->js_redirect($url);
-            return $the_content;
+            $this->wpcr_redirect($url);
         }
         
         if ($postid == 0) {
-            /* if using shortcode to show reviews for all pages, could do weird things when using product type */
+            /* NOTE: if using shortcode to show reviews for all pages, could do weird things when using product type */
             $postid = $reviews[0]->page_id;
         }
 
@@ -631,10 +657,12 @@ class WPCustomerReviews {
                 }
                 
                 $custom_shown = '';
-                foreach ($this->options['field_custom'] as $i => $val) {
-                    $show = $this->options['show_custom'][$i];
-                    if ($show == 1 && $custom_fields_unserialized[$val] != '') {
-                        $custom_shown .= "<div class='wpcr_fl'>" . $val . ': ' . $custom_fields_unserialized[$val] . '&nbsp;&bull;&nbsp;</div>';
+                foreach ($this->options['field_custom'] as $i => $val) {  
+                    if ( isset($custom_fields_unserialized[$val]) ) {
+                        $show = $this->options['show_custom'][$i];
+                        if ($show == 1 && $custom_fields_unserialized[$val] != '') {
+                            $custom_shown .= "<div class='wpcr_fl'>" . $val . ': ' . $custom_fields_unserialized[$val] . '&nbsp;&bull;&nbsp;</div>';
+                        }
                     }
                 }
 
@@ -752,31 +780,8 @@ class WPCustomerReviews {
 
     function do_the_content($original_content) {
         global $post;
-
+        
         $the_content = '';
-        
-        $has_show_shortcode = preg_match("%\[WPCR_SHOW=(.*?),(\d+)\]%",$original_content,$matches);
-        while ($has_show_shortcode) {
-            
-            /* displaying reviews using short code */
-            preg_match("%\[WPCR_SHOW=(.*?),(\d+)\]%",$original_content,$matches);
-            
-            $ret = '';
-            
-            if ( isset($matches[1]) && isset($matches[2]) && intval($matches[2]) != 0 ) {
-                                
-                if ($matches[1] == 'ALL') { $matches[1] = -1; /* -1 queries all reviews */ }
-                $postid = intval($matches[1]);
-                $max = intval($matches[2]);
-                
-                $ret_Arr = $this->output_reviews_show($postid,$max,$max);
-                $ret = $ret_Arr[0];
-            }
-            
-            $original_content = preg_replace("%\[WPCR_SHOW=(.*?),(\d+)\]%",$ret,$original_content);
-            $has_show_shortcode = preg_match("%\[WPCR_SHOW=(.*?),(\d+)\]%",$original_content,$matches);
-        }
-        
         $is_active_page = $this->is_active_page();
         
         /* return normal content if this is not an enabled page, or if this is a post not on single post view */
@@ -795,7 +800,7 @@ class WPCustomerReviews {
         $the_content .= $ret_Arr[0];
         $total_reviews = $ret_Arr[1];
         
-        $the_content .= $this->pagination($total_reviews);
+        $the_content .= $this->pagination($total_reviews, $this->options['reviews_per_page']);
 
         if ($this->options['form_location'] == 1) {
             $the_content .= $this->show_reviews_form();
@@ -811,11 +816,7 @@ class WPCustomerReviews {
         //$the_content = preg_replace('/\n\r|\r\n|\n|\r|\t|\s{2}/', '', $the_content); /* minify to prevent automatic line breaks */
         $the_content = preg_replace('/\n\r|\r\n|\n|\r|\t/', '', $the_content); /* minify to prevent automatic line breaks, not removing double spaces */
 
-        if ($is_active_page == 'shortcode') {
-            return preg_replace( "%\[WPCR_INSERT\]%", $the_content, $original_content );
-        } else {
-            return $original_content . $the_content;
-        }
+        return $original_content . $the_content;
     }
 
     function output_rating($rating, $enable_hover) {
@@ -839,21 +840,28 @@ class WPCustomerReviews {
         global $post, $current_user;
 
         $fields = '';
+        $out = '';
+        $req_js = "<script type='text/javascript'>";
 
-        $script_block = '';
-        $status_msg = '';
-        if (isset($_COOKIE['wpcr_status_msg'])) {
-            $status_msg = $_COOKIE['wpcr_status_msg'];
-            $script_block = '<script type="text/javascript">wpcr_del_cookie("wpcr_status_msg");wpcr_jump_to();</script>';
+        if ( isset($_COOKIE['wpcr_status_msg']) ) {
+            $this->status_msg = $_COOKIE['wpcr_status_msg'];
+        }
+        
+        if ($this->status_msg != '') {
+            $req_js .= "wpcr_del_cookie('wpcr_status_msg');";
         }
 
-        echo $script_block; /* to prevent filtering , we just echo it */
-
-        /* a silly yet crazy and possibly effective antispam measure.. bots won't have a clue */
+        /* a silly and crazy but effective antispam measure.. bots wont have a clue */
         $rand_prefixes = array();
         for ($i = 0; $i < 15; $i++) {
             $rand_prefixes[] = $this->rand_string(mt_rand(1, 8));
         }
+        
+        if (!isset($this->p->fname)) { $this->p->fname = ''; }
+        if (!isset($this->p->femail)) { $this->p->femail = ''; }
+        if (!isset($this->p->fwebsite)) { $this->p->fwebsite = ''; }
+        if (!isset($this->p->ftitle)) { $this->p->ftitle = ''; }
+        if (!isset($this->p->ftext)) { $this->p->ftext = ''; }
 
         if ($this->options['ask_fields']['fname'] == 1) {
             if ($this->options['require_fields']['fname'] == 1) {
@@ -895,20 +903,22 @@ class WPCustomerReviews {
         }
 
         foreach ($this->options['ask_custom'] as $i => $val) {
-            if ($val == 1) {
-                if ($this->options['require_custom'][$i] == 1) {
-                    $req = '*';
-                } else {
-                    $req = '';
+            if ( isset($this->options['require_custom'][$i]) ) {
+                if ($val == 1) {
+                    if ($this->options['require_custom'][$i] == 1) {
+                        $req = '*';
+                    } else {
+                        $req = '';
+                    }
+
+                    $custom_i = "custom_$i";
+                    if (!isset($this->p->$custom_i)) { $this->p->$custom_i = ''; }
+                    $fields .= '<tr><td><label for="custom_' . $i . '" class="comment-field">' . $custom_fields[$i] . ': ' . $req . '</label></td><td><input class="text-input" type="text" id="custom_' . $i . '" name="custom_' . $i . '" maxlength="150" value="' . $this->p->$custom_i . '" /></td></tr>';
                 }
-                $custom_i = "custom_$i";
-                $fields .= '<tr><td><label for="custom_' . $i . '" class="comment-field">' . $custom_fields[$i] . ': ' . $req . '</label></td><td><input class="text-input" type="text" id="custom_' . $i . '" name="custom_' . $i . '" maxlength="150" value="' . $this->p->$custom_i . '" /></td></tr>';
-            }
+            } 
         }
 
         $some_required = '';
-        
-        $req_js = "<script type='text/javascript'>";
         
         foreach ($this->options['require_fields'] as $col => $val) {
             if ($val == 1) {
@@ -927,9 +937,7 @@ class WPCustomerReviews {
         
         $req_js .= "</script>\n";
 
-        $out = '';
-
-        $button_html = '<div class="wpcr_status_msg">' . $status_msg . '</div>'; /* show errors or thank you message here */
+        $button_html = '<div class="wpcr_status_msg">' . $this->status_msg . '</div>'; /* show errors or thank you message here */
         $button_html .= '<p><a id="wpcr_button_1" href="javascript:void(0);">' . $this->options['goto_leave_text'] . '</a></p>';
 
         $out .= $button_html . '<hr />';
@@ -996,6 +1004,19 @@ class WPCustomerReviews {
         /* some sanitation */
         $date_time = date('Y-m-d H:i:s');
         $ip = $_SERVER['REMOTE_ADDR'];
+        
+        if (!isset($this->p->fname)) { $this->p->fname = ''; }
+        if (!isset($this->p->femail)) { $this->p->femail = ''; }
+        if (!isset($this->p->fwebsite)) { $this->p->fwebsite = ''; }
+        if (!isset($this->p->ftitle)) { $this->p->ftitle = ''; }
+        if (!isset($this->p->ftext)) { $this->p->ftext = ''; }
+        if (!isset($this->p->femail)) { $this->p->femail = ''; }
+        if (!isset($this->p->fwebsite)) { $this->p->fwebsite = ''; }
+        if (!isset($this->p->frating)) { $this->p->frating = 0; } /* default to 0 */
+        if (!isset($this->p->fconfirm1)) { $this->p->fconfirm1 = 0; } /* default to 0 */
+        if (!isset($this->p->fconfirm2)) { $this->p->fconfirm2 = 0; } /* default to 0 */
+        if (!isset($this->p->fconfirm3)) { $this->p->fconfirm3 = 0; } /* default to 0 */
+        
         $this->p->fname = trim(strip_tags($this->p->fname));
         $this->p->femail = trim(strip_tags($this->p->femail));
         $this->p->ftitle = trim(strip_tags($this->p->ftitle));
@@ -1007,7 +1028,7 @@ class WPCustomerReviews {
 
         foreach ($this->options['require_fields'] as $col => $val) {
             if ($val == 1) {
-                if ($this->p->$col == '') {
+                if (!isset($this->p->$col) || $this->p->$col == '') {
                     $nice_name = ucfirst(substr($col, 1));
                     $errors .= 'You must include your ' . $nice_name . '.<br />';
                 }
@@ -1023,13 +1044,13 @@ class WPCustomerReviews {
         foreach ($this->options['require_custom'] as $i => $val) {
             if ($val == 1) {
                 $custom_i = "custom_$i";
-                if ($this->p->$custom_i == '') {
+                if (!isset($this->p->$custom_i) || $this->p->$custom_i == '') {
                     $nice_name = $custom_fields[$i];
                     $errors .= 'You must include your ' . $nice_name . '.<br />';
                 }
             }
         }
-
+        
         /* only do regex matching if not blank */
         if ($this->p->femail != '' && $this->options['ask_fields']['femail'] == 1) {
             if (!preg_match('/^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/', $this->p->femail)) {
@@ -1067,23 +1088,24 @@ class WPCustomerReviews {
         /* end - server-side validation */
 
         $custom_insert = array();
-        for ($i = 0; $i < $custom_count; $i++) {
+        for ($i = 0; $i < $custom_count; $i++) { 
             if ($this->options['ask_custom'][$i] == 1) {
                 $name = $custom_fields[$i];
                 $custom_i = "custom_$i";
-                $custom_insert["$name"] = ucfirst($this->p->$custom_i);
+                if ( isset($this->p->$custom_i) && isset($custom_insert[$name]) ) {
+                    $custom_insert[$name] = ucfirst($this->p->$custom_i);
+                }
             }
         }
         $custom_insert = serialize($custom_insert);
 
         $query = $wpdb->prepare("INSERT INTO `$this->dbtable` 
-                (date_time, reviewer_name, reviewer_email, reviewer_ip, review_title, review_text, status, review_rating, reviewer_url, custom_fields, page_id) 
+                (`date_time`, `reviewer_name`, `reviewer_email`, `reviewer_ip`, `review_title`, `review_text`, `status`, `review_rating`, `reviewer_url`, `custom_fields`, `page_id`) 
                 VALUES (%s, %s, %s, %s, %s, %s, %d, %d, %s, %s, %d)", $date_time, $this->p->fname, $this->p->femail, $ip, $this->p->ftitle, $this->p->ftext, 0, $this->p->frating, $this->p->fwebsite, $custom_insert, $pageID);
 
         $wpdb->query($query);
 
-        $wpurl = get_bloginfo('wpurl');
-        $admin_link = trailingslashit($wpurl) . 'wp-admin/admin.php?page=wpcr_view_reviews';
+        $admin_link = $this->get_admin_path().'admin.php?page=wpcr_view_reviews';
         $admin_link = "Link to admin approval page: $admin_link";
 
         @wp_mail(get_bloginfo('admin_email'), "WP Customer Reviews: New Review Posted on " . date('m/d/Y h:i'), "A new review has been posted for " . $this->options['business_name'] . " via WP Customer Reviews. \n\nYou will need to login to the admin area and approve this review before it will appear on your site.\n\n{$admin_link}");
@@ -1094,7 +1116,7 @@ class WPCustomerReviews {
 
     function deactivate() {
         /* do not fire on upgrading plugin or upgrading WP - only on true manual deactivation */
-        if ($this->p->action == 'deactivate') {
+        if (isset($this->p->action) && $this->p->action == 'deactivate') {
             $this->options['activate'] = 0;
             update_option('wpcr_options', $this->options);
             global $WPCustomerReviewsAdmin;
@@ -1103,19 +1125,33 @@ class WPCustomerReviews {
         }
     }
 
-    function js_redirect($url, $cookie = array()) {
-        /* we do not html comment script blocks here - to prevent any issues with other plugins adding content to newlines, etc */
-        $out = "<body><div style='clear:both;text-align:center;padding:10px;'>" .
-                "Processing... Please wait..." .
-                "<script type='text/javascript'>";
-        foreach ($cookie as $col => $val) {
-            $val = preg_replace("/\r?\n/", "\\n", addslashes($val));
-            $out .= "document.cookie=\"$col=$val\";";
+    function wpcr_redirect($url, $cookie = array()) {
+        
+        $headers_sent = headers_sent();
+        
+        if ($headers_sent == true) {
+            /* use JS redirect and add cookie before redirect */
+            /* we do not html comment script blocks here - to prevent any issues with other plugins adding content to newlines, etc */
+            $out = "<html><head><title>Redirecting...</title></head><body><div style='clear:both;text-align:center;padding:10px;'>" .
+                    "Processing... Please wait..." .
+                    "<script type='text/javascript'>";
+            foreach ($cookie as $col => $val) {
+                $val = preg_replace("/\r?\n/", "\\n", addslashes($val));
+                $out .= "document.cookie=\"$col=$val\";";
+            }
+            $out .= "window.location='$url';";
+            $out .= "</script>";
+            $out .= "</div></body></html>";
+            echo $out;
+        } else {
+            foreach ($cookie as $col => $val) {
+                setcookie($col, $val); /* add cookie via headers */
+            }
+            ob_end_clean();
+            wp_redirect($url); /* nice redirect */
         }
-        $out .= "window.location='$url';";
-        $out .= "</script>";
-        $out .= "</div></body></html>";
-        return $out;
+        
+        exit();
     }
 
     function init() { /* used for admin_init also */
@@ -1123,31 +1159,43 @@ class WPCustomerReviews {
         $this->get_options(); /* populate the options array */
         $this->check_migrate(); /* call on every instance to see if we have upgraded in any way */
 
+        if ( !isset($this->p->wpcrp) ) { $this->p->wpcrp = 1; }
+        
         $this->page = intval($this->p->wpcrp);
-        if ($this->page < 1) {
-            $this->page = 1;
-        }
+        if ($this->page < 1) { $this->page = 1; }
+        
+        add_shortcode( 'WPCR_INSERT', array(&$this, 'shortcode_wpcr_insert') );
+        add_shortcode( 'WPCR_SHOW', array(&$this, 'shortcode_wpcr_show') );
         
         wp_register_style('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.css', array(), $this->plugin_version);
         wp_register_script('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.js', array('jquery'), $this->plugin_version);
     }
+    
+    function shortcode_wpcr_insert() {
+        $this->force_active_page = 1;
+        return $this->do_the_content('');        
+    }
+    
+    function shortcode_wpcr_show($atts) {
+        $this->force_active_page = 1;
+        
+        extract( shortcode_atts( array('postid' => 'all','num' => '3'), $atts ) );
+        
+        if (strtolower($postid) == 'all') { $postid = -1; /* -1 queries all reviews */ }
+        $postid = intval($postid);
+        $max = intval($num);
+        
+        $ret_Arr = $this->output_reviews_show($postid,$max,$max);
+        return $ret_Arr[0];
+    }
 
     function activate() {
-        global $wpdb;
-
-        $existing_tbl = $wpdb->get_var("SHOW TABLES LIKE '$this->dbtable'");
-        if ($existing_tbl != $this->dbtable) {
-            global $WPCustomerReviewsAdmin;
-            $this->include_admin(); /* include admin functions */
-            $WPCustomerReviewsAdmin->createReviewtable();
-        }
-
         add_option('wpcr_gotosettings', true); /* used for redirecting to settings page upon initial activation */
     }
 
     function include_admin() {
         global $WPCustomerReviewsAdmin;
-        require_once($this->getplugindir . 'wp-customer-reviews-admin.php'); /* include admin functions */
+        require_once($this->getplugindir() . 'wp-customer-reviews-admin.php'); /* include admin functions */
     }
 
     function admin_init() {
