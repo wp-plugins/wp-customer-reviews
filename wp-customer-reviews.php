@@ -3,7 +3,7 @@
  * Plugin Name: WP Customer Reviews
  * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.3.8
+ * Version: 2.3.9
  * Revision Date: August 25, 2011
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.3
@@ -63,11 +63,12 @@ class WPCustomerReviews {
                 
         add_action('wp_print_styles',array(&$this, 'add_style')); /* add style */
         add_action('template_redirect',array(&$this, 'add_script')); /* add script */
-
-        add_filter('plugin_action_links_' . plugin_basename(__FILE__), array(&$this, 'plugin_settings_link'));
+        
         add_action('admin_menu', array(&$this, 'addmenu'));
         add_action('wp_ajax_update_field', array(&$this, 'admin_view_reviews')); /* special ajax stuff */
         add_action('save_post', array(&$this, 'admin_save_post'), 10, 2); /* 2 arguments */
+        
+        add_filter('plugin_action_links_' . plugin_basename(__FILE__), array(&$this, 'plugin_settings_link'));
     }
 
     /* keep out of admin file */
@@ -118,7 +119,7 @@ class WPCustomerReviews {
     function admin_save_post($post_id, $post) {
         global $WPCustomerReviewsAdmin;
         $this->include_admin(); /* include admin functions */
-        $WPCustomerReviewsAdmin->real_admin_save_post($post_id, $post);
+        $WPCustomerReviewsAdmin->real_admin_save_post($post_id);
     }
 
     /* forward to admin file */
@@ -134,6 +135,19 @@ class WPCustomerReviews {
         $plugin_data = get_plugin_data( __FILE__ );
         $plugin_version = $plugin_data['Version'];
         return $plugin_version;
+    }
+    
+    function get_jumplink_for_review($review,$page) {
+        /* $page will be 1 for shortcode usage since it pulls most recent, which SHOULD all be on page 1 */
+        $link = get_permalink( $review->page_id );
+        
+        if (strpos($link,'?') === false) {
+            $link = trailingslashit($link) . "?wpcrp=$page#hreview-$review->id";
+        } else {
+            $link = $link . "&wpcrp=$page#hreview-$review->id";
+        }
+        
+        return $link;
     }
 
     function get_options() {
@@ -161,6 +175,7 @@ class WPCustomerReviews {
             'field_custom' => array(),
             'form_location' => 0,
             'goto_leave_text' => 'Click here to submit your review.',
+            'goto_show_button' => 1,
             'hreview_type' => 'business',
             'leave_text' => 'Submit your review',
             'require_custom' => array(),
@@ -168,11 +183,13 @@ class WPCustomerReviews {
             'reviews_per_page' => 10,
             'show_custom' => array(),
             'show_fields' => array('fname' => 1, 'femail' => 0, 'fwebsite' => 0, 'ftitle' => 1, 'fage' => 0, 'fgender' => 0),
+            'show_hcard' => 1,
             'show_hcard_on' => 1,
             'submit_button_text' => 'Submit your review',
             'support_us' => 1,
             'title_tag' => 'h2'
         );
+        
         $this->options = get_option('wpcr_options', $default_options);
 
         /* magically easy migrations to newer versions */
@@ -437,28 +454,70 @@ class WPCustomerReviews {
             /* start - make sure we should continue */
             $show = false;
 
-            if ($this->options['show_hcard_on'] == 1) {
+            if ( $this->options['show_hcard_on'] == 1 ) {
                 $show = true;
-            } else if ($this->options['show_hcard_on'] == 2 && ( is_home() || is_front_page() )) {
+            } else if ( $this->options['show_hcard_on'] == 2 && ( is_home() || is_front_page() ) ) {
                 $show = true;
-            } else if ($this->options['show_hcard_on'] == 3 && $this->is_active_page()) {
+            } else if ( $this->options['show_hcard_on'] == 3 && $this->is_active_page() ) {
                 $show = true;
-            } /* show only on a single page with is_singular() */
+            }
             /* end - make sure we should continue */
+            
+            $div_id = "wpcr_hcard_h";
+            if ( $this->is_active_page() ) {
+                if ( $this->options['show_hcard'] == 1 ) {
+                    $div_id = "wpcr_hcard_s";
+                }
+            }
 
             if ($show) { /* we append like this to prevent newlines and wpautop issues */
-                $aggregate_footer_output = '<div id="wpcr-hcard" class="vcard" style="display:none;">' .
-                        '<a class="url fn org" href="' . $this->options['business_url'] . '">' . $this->options['business_name'] . '</a>' .
-                        '<a class="email" href="mailto:' . $this->options['business_email'] . '">' . $this->options['business_email'] . '</a>' .
-                        '<span class="adr">' .
-                        '<span class="street-address">' . $this->options['business_street'] . '</span>' .
-                        '<span class="locality">' . $this->options['business_city'] . '</span>,' .
-                        '<span class="region">' . $this->options['business_state'] . '</span>,' .
-                        '<span class="postal-code">' . $this->options['business_zip'] . '</span>' .
-                        '<span class="country-name">' . $this->options['business_country'] . '</span>' .
-                        '</span>' .
-                        '<span class="tel">' . $this->options['business_phone'] . '</span>' .
-                        '</div>';
+                
+                $aggregate_footer_output = '<div id="' . $div_id . '" class="vcard">';
+                $aggregate_footer_output .= '<a class="url fn org" href="' . $this->options['business_url'] . '">' . $this->options['business_name'] . '</a><br />';
+                
+                if (
+                        $this->options['business_street'] != '' || 
+                        $this->options['business_city'] != '' ||
+                        $this->options['business_state'] != '' ||
+                        $this->options['business_zip'] != '' ||
+                        $this->options['business_country'] != ''
+                   )
+                {
+                    $aggregate_footer_output .= '<span class="adr">';
+                    if ($this->options['business_street'] != '') {
+                        $aggregate_footer_output .= '<span class="street-address">' . $this->options['business_street'] . '</span>&nbsp;';
+                    }
+                    if ($this->options['business_city'] != '') {
+                        $aggregate_footer_output .='<span class="locality">' . $this->options['business_city'] . '</span>,&nbsp;';
+                    }
+                    if ($this->options['business_state'] != '') {
+                        $aggregate_footer_output .='<span class="region">' . $this->options['business_state'] . '</span>,&nbsp;';
+                    }
+                    if ($this->options['business_zip'] != '') {
+                        $aggregate_footer_output .='<span class="postal-code">' . $this->options['business_zip'] . '</span>&nbsp;';
+                    }
+                    if ($this->options['business_country'] != '') {
+                        $aggregate_footer_output .='<span class="country-name">' . $this->options['business_country'] . '</span>&nbsp;';
+                    }
+
+                    $aggregate_footer_output .= '</span>';
+                }
+
+                if ($this->options['business_email'] != '' && $this->options['business_phone'] != '') {
+                    $aggregate_footer_output .= '<br />';
+                }
+
+                if ($this->options['business_email'] != '') {
+                    $aggregate_footer_output .= '<a class="email" href="mailto:' . $this->options['business_email'] . '">' . $this->options['business_email'] . '</a>';
+                }
+                if ($this->options['business_email'] != '' && $this->options['business_phone'] != '') {
+                    $aggregate_footer_output .= '&nbsp;&bull;&nbsp';
+                }
+                if ($this->options['business_phone'] != '') {
+                    $aggregate_footer_output .= '<span class="tel">' . $this->options['business_phone'] . '</span>';
+                }
+
+                $aggregate_footer_output .= '</div>';
             }
         }
 
@@ -548,7 +607,7 @@ class WPCustomerReviews {
         }
     }
         
-    function output_reviews_show($postid, $perpage, $max) {
+    function output_reviews_show($inside_div, $postid, $perpage, $max, $hide_custom = 0, $hide_response = 0, $snippet_length = 0, $show_morelink = '') {
         
         if ($max != -1) {
             $thispage = 1;
@@ -587,8 +646,12 @@ class WPCustomerReviews {
         $meta_product_sku = get_post_meta($postid, 'wpcr_product_sku', true);
         $meta_product_model = get_post_meta($postid, 'wpcr_product_model', true);
 
+        if (!$inside_div) {
+            $reviews_content .= '<div id="wpcr_respond_1">';
+        }
+        
         if (count($reviews) == 0) {
-            $the_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>';
+            $reviews_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>';
         } else {
 
             $this->get_aggregate_reviews($postid);
@@ -621,6 +684,12 @@ class WPCustomerReviews {
             }
 
             foreach ($reviews as $review) {
+                
+                if ($snippet_length > 0)
+                {
+                    $review->review_text = $this->trim_text_to_word($review->review_text,$snippet_length);
+                }
+                
                 $review->review_text .= '<br />';
 
                 $hide_name = '';
@@ -644,29 +713,40 @@ class WPCustomerReviews {
                     $review->review_title = substr($review->review_text, 0, 150);
                     $hidesummary = 'wpcr_hide';
                 }
-
-                $review->review_text = nl2br($review->review_text);
-                $review->review_response = nl2br($review->review_response);
-                if (strlen($review->review_response) > 0) {
-                    $review->review_response = '<strong>Response:</strong> ' . $review->review_response;
-                }
-
-                $custom_fields_unserialized = @unserialize($review->custom_fields);
-                if (!is_array($custom_fields_unserialized)) {
-                    $custom_fields_unserialized = array();
+                
+                if ($show_morelink != '') {
+                    $review->review_text .= " <a href='".$this->get_jumplink_for_review($review,1)."'>$show_morelink</a>";
                 }
                 
-                $custom_shown = '';
-                foreach ($this->options['field_custom'] as $i => $val) {  
-                    if ( isset($custom_fields_unserialized[$val]) ) {
-                        $show = $this->options['show_custom'][$i];
-                        if ($show == 1 && $custom_fields_unserialized[$val] != '') {
-                            $custom_shown .= "<div class='wpcr_fl'>" . $val . ': ' . $custom_fields_unserialized[$val] . '&nbsp;&bull;&nbsp;</div>';
-                        }
+                $review->review_text = nl2br($review->review_text);
+                $review_response = '';
+                
+                if ($hide_response == 0)
+                {
+                    if (strlen($review->review_response) > 0) {
+                        $review_response = '<p class="response"><strong>Response:</strong> ' . nl2br($review->review_response) . '</p>';
                     }
                 }
 
-                $custom_shown = preg_replace("%&bull;&nbsp;</div>$%si","</div><div class='wpcr_clear'></div>",$custom_shown);
+                $custom_shown = '';
+                if ($hide_custom == 0)
+                {
+                    $custom_fields_unserialized = @unserialize($review->custom_fields);
+                    if (!is_array($custom_fields_unserialized)) {
+                        $custom_fields_unserialized = array();
+                    }
+
+                    foreach ($this->options['field_custom'] as $i => $val) {  
+                        if ( isset($custom_fields_unserialized[$val]) ) {
+                            $show = $this->options['show_custom'][$i];
+                            if ($show == 1 && $custom_fields_unserialized[$val] != '') {
+                                $custom_shown .= "<div class='wpcr_fl'>" . $val . ': ' . $custom_fields_unserialized[$val] . '&nbsp;&bull;&nbsp;</div>';
+                            }
+                        }
+                    }
+
+                    $custom_shown = preg_replace("%&bull;&nbsp;</div>$%si","</div><div class='wpcr_clear'></div>",$custom_shown);
+                }
 
                 $name_block = '' .
                     '<div class="wpcr_fl wpcr_rname">' .
@@ -695,7 +775,7 @@ class WPCustomerReviews {
                             ' . $name_block . '
                             <div class="wpcr_clear wpcr_spacing1"></div>
                             <blockquote class="description"><p>' . $review->review_text . '</p></blockquote>
-                            <p class="response">' . $review->review_response . '</p>
+                            ' . $review_response . '
                             <span style="display:none;" class="type">product</span>
                             <span style="display:none;" class="version">0.3</span>
                         </div>
@@ -723,7 +803,7 @@ class WPCustomerReviews {
                                 </span>
                             </span>
                             <blockquote class="description"><p>' . $review->review_text . '</p></blockquote>
-                            <p class="response">' . $review->review_response . '</p>
+                            ' . $review_response . '
                             <span style="display:none;" class="type">business</span>
                             <span style="display:none;" class="version">0.3</span>
                        </div>
@@ -775,7 +855,21 @@ class WPCustomerReviews {
             }
         }
         
+        if (!$inside_div) {
+            $reviews_content .= '</div>'; /* wpcr_respond_1 */
+        }
+        
         return array($reviews_content, $total_reviews);
+    }
+    
+    /* trims text, but does not break up a word */
+    function trim_text_to_word($text,$len) {
+        if(strlen($text) > $len) {
+          $matches = array();
+          preg_match("/^(.{1,$len})[\s]/i", $text, $matches);
+          $text = $matches[0];
+        }
+        return $text.'... ';
     }
 
     function do_the_content($original_content) {
@@ -786,17 +880,20 @@ class WPCustomerReviews {
         
         /* return normal content if this is not an enabled page, or if this is a post not on single post view */
         if (!$is_active_page) {
+            $the_content .= '<div id="wpcr_respond_1">';
             $the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer then */
+            $the_content .= '</div>';
             return $original_content . $the_content;
         }
         
         $the_content .= '<div id="wpcr_respond_1">'; /* start the div */
-
+        $inside_div = true;
+        
         if ($this->options['form_location'] == 0) {
             $the_content .= $this->show_reviews_form();
         }
 
-        $ret_Arr = $this->output_reviews_show( $post->ID, $this->options['reviews_per_page'], -1 );
+        $ret_Arr = $this->output_reviews_show( $inside_div, $post->ID, $this->options['reviews_per_page'], -1 );
         $the_content .= $ret_Arr[0];
         $total_reviews = $ret_Arr[1];
         
@@ -809,9 +906,10 @@ class WPCustomerReviews {
         if ($this->options['support_us'] == 1) {
             $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
         }
-        $the_content .= '</div>';
-
+        
         $the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer also */
+        
+        $the_content .= '</div>'; /* wpcr_respond_1 */
 
         //$the_content = preg_replace('/\n\r|\r\n|\n|\r|\t|\s{2}/', '', $the_content); /* minify to prevent automatic line breaks */
         $the_content = preg_replace('/\n\r|\r\n|\n|\r|\t/', '', $the_content); /* minify to prevent automatic line breaks, not removing double spaces */
@@ -936,11 +1034,12 @@ class WPCustomerReviews {
         }
         
         $req_js .= "</script>\n";
-
-        $button_html = '<div class="wpcr_status_msg">' . $this->status_msg . '</div>'; /* show errors or thank you message here */
-        $button_html .= '<p><a id="wpcr_button_1" href="javascript:void(0);">' . $this->options['goto_leave_text'] . '</a></p>';
-
-        $out .= $button_html . '<hr />';
+        
+        if ($this->options['goto_show_button'] == 1) {
+            $button_html = '<div class="wpcr_status_msg">' . $this->status_msg . '</div>'; /* show errors or thank you message here */
+            $button_html .= '<p><a id="wpcr_button_1" href="javascript:void(0);">' . $this->options['goto_leave_text'] . '</a></p><hr />';
+            $out .= $button_html;
+        }
 
         /* different output variables make it easier to debug this section */
         $out .= '<div id="wpcr_respond_2">' . $req_js . '
@@ -1179,17 +1278,30 @@ class WPCustomerReviews {
     function shortcode_wpcr_show($atts) {
         $this->force_active_page = 1;
         
-        extract( shortcode_atts( array('postid' => 'all','num' => '3'), $atts ) );
+        extract( shortcode_atts( array('postid' => 'all','num' => '3','hidecustom' => '0','hideresponse' => '0', 'snippet' => '0','more' => ''), $atts ) );
         
         if (strtolower($postid) == 'all') { $postid = -1; /* -1 queries all reviews */ }
         $postid = intval($postid);
-        $max = intval($num);
+        $num = intval($num);
+        $hidecustom = intval($hidecustom);
+        $hideresponse = intval($hideresponse);
+        $snippet = intval($snippet);
+        $more = $more;
         
-        $ret_Arr = $this->output_reviews_show($postid,$max,$max);
+        if ($postid < -1) { $postid = -1; }
+        if ($num < 1) { $num = 3; }
+        if ($hidecustom < 0 || $hidecustom > 1) { $hidecustom = 0; }
+        if ($hideresponse < 0 || $hideresponse > 1) { $hideresponse = 0; } 
+        if ($snippet < 0) { $snippet = 0; }
+        
+        $inside_div = false;
+        
+        $ret_Arr = $this->output_reviews_show( $inside_div, $postid, $num, $num, $hidecustom, $hideresponse, $snippet, $more );
         return $ret_Arr[0];
     }
 
     function activate() {
+        register_setting('wpcr_gotosettings', 'wpcr_gotosettings');
         add_option('wpcr_gotosettings', true); /* used for redirecting to settings page upon initial activation */
     }
 

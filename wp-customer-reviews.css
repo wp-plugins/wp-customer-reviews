@@ -29,6 +29,11 @@
 #wpcr_respond_1 blockquote.description p { font-size:14px; font-weight:normal; display:inline !important; }
 #wpcr_respond_1 p.response { font-size:14px; font-weight:normal; font-style:italic; }
 
+/* hcard */
+#wpcr_respond_1 .vcard { font-size:10px !important; padding-bottom:5px; line-height:11px !important; }
+#wpcr_hcard_h { display:none; }
+#wpcr_hcard_s { display:block; }
+
 #wpcr_postcomment { font-size:1.1em; font-weight:bold; }
 
 #wpcr_commentform label { display:inline !important; }

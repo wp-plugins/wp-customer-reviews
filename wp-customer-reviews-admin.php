@@ -18,10 +18,13 @@ class WPCustomerReviewsAdmin
 	
             $this->parentClass->init();
             $this->enqueue_admin_stuff();
+            
+            register_setting( 'wpcr_options', 'wpcr_options' );
 	
             /* used for redirecting to settings page upon initial activation */
             if (get_option('wpcr_gotosettings', false)) {
                 delete_option('wpcr_gotosettings');
+                unregister_setting('wpcr_gotosettings', 'wpcr_gotosettings');
 
                 /* no auto settings redirect if upgrading */
                 if ( isset($this->p->action) && $this->p->action == 'activate-plugin' ) { return false; }
@@ -99,22 +102,18 @@ class WPCustomerReviewsAdmin
 		add_meta_box($meta_box['id'], $meta_box['title'], array(&$this, 'wpcr_show_meta_box'), 'post', $meta_box['context'], $meta_box['priority']);
 	}
 	
-	function real_admin_save_post($post_id)
-	{
+	function real_admin_save_post($post_id) {
             global $meta_box,$wpdb;
-
-            // verify nonce
-            if (!wp_verify_nonce($_POST['wpcr_show_meta_box_nonce'], basename(__FILE__))) {
-                return $post_id;
-            }
+            
+            
 
             // check autosave
             if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-                    return $post_id;
+                return $post_id;
             }
 
             // check permissions
-            if ('page' == $_POST['post_type']) {
+            if ('page' == $this->p->post_type) {
                 if (!current_user_can('edit_page', $post_id)) {
                     return $post_id;
                 }
@@ -123,14 +122,22 @@ class WPCustomerReviewsAdmin
             }
 
             foreach ($meta_box['fields'] as $field) {
-                $old = get_post_meta($post_id, $field['id'], true);
-                $new = $_POST[$field['id']];
-
-                if ($new && $new != $old) {
-                        update_post_meta($post_id, $field['id'], $new);
-                } elseif ('' == $new && $old) {
+                
+                if ( isset($this->p->post_title) ) {
+                    $old = get_post_meta($post_id, $field['id'], true);
+                    
+                    if (isset($this->p->$field['id'])) {
+                        $new = $this->p->$field['id'];
+                        if ($new && $new != $old) {
+                            update_post_meta($post_id, $field['id'], $new);
+                        } elseif ($new == '' && $old) {
+                            delete_post_meta($post_id, $field['id'], $old);
+                        }
+                    } else {
                         delete_post_meta($post_id, $field['id'], $old);
+                    }
                 }
+                
             }
 
             return $post_id;
@@ -138,9 +145,6 @@ class WPCustomerReviewsAdmin
 	
 	function wpcr_show_meta_box() {
 		global $meta_box, $post;
-    
-		// Use nonce for verification
-		echo '<input type="hidden" name="wpcr_show_meta_box_nonce" value="', wp_create_nonce(basename(__FILE__)), '" />';
 		
 		echo '<table class="form-table">';
 
@@ -303,11 +307,15 @@ class WPCustomerReviewsAdmin
     }
 	
     function update_options() {
+        /* we still process and validate this internally, instead of using the Settings API */
+        
         global $wpdb;
         $msg ='';
+        
+        $this->security();
                 
         if (isset($this->p->optin))
-        {        			
+        {      			
             if ($this->options['activate'] == 0)
             {
                 $this->options['activate'] = 1;
@@ -319,7 +327,9 @@ class WPCustomerReviewsAdmin
             }
         }
         else
-        {	
+        {
+            check_admin_referer('wpcr_options-options'); /* nonce check */
+            
             $updated_options = $this->options;
 		
             /* reset these to 0 so we can grab the settings below */
@@ -367,13 +377,21 @@ class WPCustomerReviewsAdmin
                 }
             }
             
+            /* prevent E_NOTICE warnings */
+            if (!isset($this->p->enable_pages_default)) { $this->p->enable_pages_default = $this->options['enable_pages_default']; }
+            if (!isset($this->p->enable_posts_default)) { $this->p->enable_posts_default = $this->options['enable_posts_default']; }
+            if (!isset($this->p->goto_show_button)) { $this->p->goto_show_button = $this->options['goto_show_button']; }
+            if (!isset($this->p->support_us)) { $this->p->support_us = $this->options['support_us']; }
+            
             /* some int validation */
+            $updated_options['enable_pages_default'] = intval($this->p->enable_pages_default);
+            $updated_options['enable_posts_default'] = intval($this->p->enable_posts_default);
+            $updated_options['form_location'] = intval($this->p->form_location);
+            $updated_options['goto_show_button'] = intval($this->p->goto_show_button);
             $updated_options['reviews_per_page'] = intval($this->p->reviews_per_page);
+            $updated_options['show_hcard'] = intval($this->p->show_hcard);
             $updated_options['show_hcard_on'] = intval($this->p->show_hcard_on);
             $updated_options['support_us'] = intval($this->p->support_us);
-            $updated_options['form_location'] = intval($this->p->form_location);
-            $updated_options['enable_posts_default'] = intval($this->p->enable_posts_default);
-            $updated_options['enable_pages_default'] = intval($this->p->enable_pages_default);
             
             if ($updated_options['reviews_per_page'] < 1) { $updated_options['reviews_per_page'] = 10; }
 
@@ -401,7 +419,7 @@ class WPCustomerReviewsAdmin
         return $msg;
     }
 	
-	function show_activation() {
+    function show_activation() {
         echo '
         <div class="postbox" style="width:700px;">
             <h3>Notify me of new releases</h3>
@@ -441,6 +459,11 @@ class WPCustomerReviewsAdmin
         if ($this->options['enable_pages_default']) {
             $enable_pages_checked = 'checked';
         }
+        
+        $goto_show_button_checked = '';
+        if ($this->options['goto_show_button']) {
+            $goto_show_button_checked = 'checked';
+        }
 		
         $af = array('fname' => '','femail' => '','fwebsite' => '','ftitle' => '');
         if ($this->options['ask_fields']['fname'] == 1) { $af['fname'] = 'checked'; }
@@ -474,21 +497,42 @@ class WPCustomerReviewsAdmin
                     <br /><br />
                     [WPCR_INSERT] <small>is available for you to use on any page/post. Simply include [WPCR_INSERT] in the content of the post where you would like the reviews/form output to be displayed. If this code is found, the plugin will automatically enable itself for the post.</small>
                     <br /><br />
-                    [WPCR_SHOW POSTID="<span style="color:#090;">ALL</span>" NUM="<span style="color:#00c;">3</span>"] <small>is available to show the latest <span style="color:#009;">3</span> reviews from <span style="color:#090;">ALL</span> pages, or use POSTID="<span style="color:#090;">123</span>" to show reviews from post/page ID #<span style="color:#090;">123</span>. An example would be to use this in the sidebar contents of a page, or maybe on the homepage.</small>
+                    [WPCR_SHOW 
+                        POSTID="<span style="color:#00c;">ALL</span>" 
+                        NUM="<span style="color:#00c;">3</span>" 
+                        SNIPPET="" 
+                        MORE="" 
+                        HIDECUSTOM="<span style="color:#00c;">0</span>" 
+                        HIDERESPONSE="<span style="color:#00c;">0</span>"] 
+                    <br /><small>is available to show the latest reviews. Explanation below: <br /> 
+                    POSTID="ALL" to show recent reviews from ALL posts/pages or POSTID="123" to show recent reviews from post/page ID #123<br />
+                    NUM="3" will show a maximum of 3 reviews (without pagination).<br />
+                    SNIPPET="140" will only show the first 140 characters of a review.<br />
+                    MORE="view more" will show "... view more" with a link to the actual review on the associated page.<br />
+                    HIDECUSTOM="1" will hide all custom fields in the shortcode output.<br />
+                    HIDERESPONSE="1" will hide the administrator response to the review.<br />
+                    </small>
                 </div>
                 <form method="post" action="">
                     <div style="background:#eaf2fa;padding:6px;border-top:1px solid #ccc;border-bottom:1px solid #ccc;">
                         <legend>Business Information (for hidden hCard)</legend>
                     </div>
                     <div style="padding:10px;">
-                        <label for="show_hcard_on">Enable (hidden) Business hCard output on: </label>
+                        <label for="show_hcard_on">Enable Business hCard output on: </label>
                         <select id="show_hcard_on" name="show_hcard_on">
-                                <option ';if ($this->options['show_hcard_on'] == 1) { echo "selected"; } echo ' value="1">All wordpress posts &amp; pages</option>
-                                <option ';if ($this->options['show_hcard_on'] == 2) { echo "selected"; } echo ' value="2">Homepage &amp; review page</option>
-                                <option ';if ($this->options['show_hcard_on'] == 3) { echo "selected"; } echo ' value="3">Only the review page</option>
-                                <option ';if ($this->options['show_hcard_on'] == 0) { echo "selected"; } echo ' value="0">Never</option>
+                            <option ';if ($this->options['show_hcard_on'] == 1) { echo "selected"; } echo ' value="1">All wordpress posts &amp; pages</option>
+                            <option ';if ($this->options['show_hcard_on'] == 2) { echo "selected"; } echo ' value="2">Homepage &amp; review page</option>
+                            <option ';if ($this->options['show_hcard_on'] == 3) { echo "selected"; } echo ' value="3">Only the review page</option>
+                            <option ';if ($this->options['show_hcard_on'] == 0) { echo "selected"; } echo ' value="0">Never</option>
                         </select><br />
-                        <small>This will enable (hidden) the hCard microformat, which includes your business contact information. This is recommended to enable for all posts &amp; pages.</small>
+                        <small>This will enable the hCard microformat, which includes your business contact information. This is recommended to enable for all posts &amp; pages.</small>
+                        <br /><br />
+                        <label for="show_hcard">Business hCard Visibility: </label>
+                        <select id="show_hcard" name="show_hcard">
+                            <option ';if ($this->options['show_hcard'] == 0) { echo "selected"; } echo ' value="0">Hide hCard to Visitors</option>
+                            <option ';if ($this->options['show_hcard'] == 1) { echo "selected"; } echo ' value="1">Show hCard to Visitors</option>
+                        </select><br />
+                        <small>This will display the hCard to visitors (and search engines). Search engines will normally ignore microformat information that is hidden, so it is usually a good idea to set this to "Show". "Show" will ONLY affect individual enabled pages/posts. If you want to hide elements of the hCard output, the individual styles can be overridden by your theme CSS.</small>
                         <br /><br />
                         <label for="business_name">Business Name (<span style="color:#c00;">Required</span>): </label><input style="width:250px;" type="text" id="business_name" name="business_name" value="'.$this->options['business_name'].'" />
                         <br />
@@ -596,11 +640,15 @@ class WPCustomerReviewsAdmin
                             <option ';if ($this->options['title_tag'] == 'h6') { echo "selected"; } echo ' value="h6">H7</option>
                         </select>
                         <br /><br />
+                        <label for="goto_show_button">Show review form: </label><input type="checkbox" id="goto_show_button" name="goto_show_button" value="1" '.$goto_show_button_checked.' />
+                        <br />
+                        <small>If this option is unchecked, there will be no visible way for visitors to submit reviews.</small>
+                        <br /><br />
                         <label for="goto_leave_text">Button text used to show review form: </label><input style="width:250px;" type="text" id="goto_leave_text" name="goto_leave_text" value="'.$this->options['goto_leave_text'].'" />
                         <br />
                         <small>This button will be shown above the first review.</small>
                         <br /><br />
-                        <label for="leave_text">Text to be displayed above review form: </label><input style="width:250px;" type="text" id="leave_text" name="leave_text" value="'.$this->options['leave_text'].'" />
+                        <label for="leave_text">Text to be displayed above review form: </label><input style="width:250px;" type="text" id="goto_leave_text" name="goto_leave_text" value="'.$this->options['goto_leave_text'].'" />
                         <br />
                         <small>This will be shown as a heading immediately above the review form.</small>
                         <br /><br />
@@ -618,18 +666,25 @@ class WPCustomerReviewsAdmin
                         <div class="submit" style="padding:10px 0px 0px 0px;"><input type="submit" class="button-primary" value="Disable Plugin for all Existing Posts" name="Submit"></div>
                         <div class="submit" style="padding:10px 0px 0px 0px;"><input type="submit" class="button-primary" value="Enable Plugin for all Existing Pages" name="Submit"></div>
                         <div class="submit" style="padding:10px 0px 0px 0px;"><input type="submit" class="button-primary" value="Disable Plugin for all Existing Pages" name="Submit"></div>
-                    </div>
+                    </div>';
+                    settings_fields("wpcr_options");
+                    echo '
                 </form>
                 <br />
             </div>
         </div>';
+        /* settings_fields is for Settings API / WPMU / future WP compatibility */
     }
-	
-	function real_admin_options() { 
+    
+    function security() {
         if (!current_user_can('manage_options'))
         {
             wp_die( __('You do not have sufficient permissions to access this page.') );
         }
+    }
+	
+    function real_admin_options() {
+        $this->security();
 
         $msg = '';
         
@@ -712,7 +767,7 @@ class WPCustomerReviewsAdmin
         echo '<br /></div>';
     }
 	
-	function real_admin_view_reviews() {        
+    function real_admin_view_reviews() {      
         global $wpdb;
         
         if (!isset($this->p->s)) { $this->p->s = ''; }
@@ -894,7 +949,7 @@ class WPCustomerReviewsAdmin
         /* end - searching */
         else
         {
-            $arr_Reviews = $this->parentClass->get_reviews(-1,$this->page,10,$this->p->review_status);
+            $arr_Reviews = $this->parentClass->get_reviews(-1,$this->page,$this->options['reviews_per_page'],$this->p->review_status);
             $reviews = $arr_Reviews[0];
             $total_reviews = $arr_Reviews[1];
         }
@@ -1053,7 +1108,7 @@ class WPCustomerReviewsAdmin
                             <span class="best_in_place" data-url='<?php echo $update_path; ?>' data-object='json' data-attribute='date_time'>
                             <?php echo date("m/d/Y g:i a",strtotime($review->date_time)); ?></a>
                             </span>&nbsp;on&nbsp;<?php echo get_the_title($review->page_id); ?>
-                            <?php if ($review->status == 1) : ?>[<a target="_blank" href="<?php echo trailingslashit( get_permalink( $review->page_id ) ); ?>?wpcrp=<?php echo $this->page; ?>#hreview-<?php echo $rid;?>">View Review on Page</a>]<?php endif; ?>
+                            <?php if ($review->status == 1) : ?>[<a target="_blank" href="<?php echo $this->parentClass->get_jumplink_for_review($review,$this->page); ?>">View Review on Page</a>]<?php endif; ?>
                           </div>
                           <p>
                               <span style="font-size:13px;font-weight:bold;">Title:&nbsp;</span>
@@ -1114,7 +1169,7 @@ class WPCustomerReviewsAdmin
                       </select>&nbsp;
                       <input type="submit" class="button-secondary apply" name="act2" value="Apply" id="doaction2" />
                 </div>
-                <div class="alignleft actions" style="float:left;padding-left:20px;"><?php echo $this->parentClass->pagination($total_reviews, 10); ?></div>  
+                <div class="alignleft actions" style="float:left;padding-left:20px;"><?php echo $this->parentClass->pagination($total_reviews, $this->options['reviews_per_page']); ?></div>  
                 <br class="clear" />
               </div>
             </form>
