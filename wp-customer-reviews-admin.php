@@ -152,18 +152,18 @@ class WPCustomerReviewsAdmin
 			// get current post meta data
 			$meta = get_post_meta($post->ID, $field['id'], true);
                                                
-                        if ($field['id'] == 'wpcr_enable' && $post->post_name == '') {
-                            if ($post->post_type == 'post' && $this->options['enable_posts_default'] == 1) {
-                                $meta = 1; /* enable by default for posts */
-                            }
-                            else if ($post->post_type == 'page' && $this->options['enable_pages_default'] == 1) {
-                                $meta = 1; /* enable by default for pages */
-                            }
-                        }
+			if ($field['id'] == 'wpcr_enable' && $post->post_name == '') {
+				if ($post->post_type == 'post' && $this->options['enable_posts_default'] == 1) {
+					$meta = 1; /* enable by default for posts */
+				}
+				else if ($post->post_type == 'page' && $this->options['enable_pages_default'] == 1) {
+					$meta = 1; /* enable by default for pages */
+				}
+			}
 			
 			echo '<tr>',
-                             '<th style="width:30%"><label for="', $field['id'], '">', $field['name'], '</label></th>',
-                             '<td>';
+				 '<th style="width:30%"><label for="', $field['id'], '">', $field['name'], '</label></th>',
+				 '<td>';
 			switch ($field['type']) {
 				case 'text':
 					echo '<input type="text" name="', $field['id'], '" id="', $field['id'], '" value="', $meta ? $meta : $field['std'], '" size="30" style="width:97%" />', '<br />', $field['desc'];
@@ -378,10 +378,10 @@ class WPCustomerReviewsAdmin
             }
             
             /* prevent E_NOTICE warnings */
-            if (!isset($this->p->enable_pages_default)) { $this->p->enable_pages_default = $this->options['enable_pages_default']; }
-            if (!isset($this->p->enable_posts_default)) { $this->p->enable_posts_default = $this->options['enable_posts_default']; }
-            if (!isset($this->p->goto_show_button)) { $this->p->goto_show_button = $this->options['goto_show_button']; }
-            if (!isset($this->p->support_us)) { $this->p->support_us = $this->options['support_us']; }
+            if (!isset($this->p->enable_pages_default)) { $this->p->enable_pages_default = 0; }
+            if (!isset($this->p->enable_posts_default)) { $this->p->enable_posts_default = 0; }
+            if (!isset($this->p->goto_show_button)) { $this->p->goto_show_button = 0; }
+            if (!isset($this->p->support_us)) { $this->p->support_us = 0; }
             
             /* some int validation */
             $updated_options['enable_pages_default'] = intval($this->p->enable_pages_default);

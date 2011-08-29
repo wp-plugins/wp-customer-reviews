@@ -2,7 +2,7 @@
 Contributors: bompus
 Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget, hproduct, product, snippet, snippets, wordpressmu, wpmu, mu
-Requires at least: 3.0
+Requires at least: 2.8.6
 Tested up to: 3.3
 Stable tag: trunk
 
@@ -54,6 +54,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.4.0 =
+* [Fix] Admin - Some checkbox plugin settings could not be saved
+
 = 2.3.9 =
 * [Fix] Admin - Added better support for WPMU and to ensure ongoing WP compatibility
 * [Fix] Shortcodes were not outputting inside of the correct container
@@ -93,19 +96,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * [Update] Beta testing - Shortcode has been added for displaying the reviews/form anywhere in any page
 * [Update] Beta testing - Shortcode has been added for displaying review contents from any page in any other page
 
-= 2.3.3 =
-* [Update] Forgot to bump internal version number
-
-= 2.3.2 =
-* [Update] Bumping version number to force WP Plugin Directory to update
-
-= 2.3.1 =
-* [Update] Verified compatibility with Wordpress 3.3
-
-= 2.3.0 =
-* [Fix] Updated methods to include required Javascript and CSS files. This should solve some compatibility issues with some themes.
-
 == Upgrade Notice ==
 
-= 2.3.9 =
+= 2.4.0 =
 Several fixes for compatibility with themes and plugins
