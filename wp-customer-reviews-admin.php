@@ -221,37 +221,14 @@ class WPCustomerReviewsAdmin
 	
 	function force_update_cache() {
 			global $wpdb;
-	
-			/* update all pages we are using, this will force it to update with caching plugins */
-			/*
-            $pages = $wpdb->get_results( "SELECT `ID` FROM $wpdb->posts AS `p`, $wpdb->postmeta AS `pm`
-                                            WHERE p.ID = pm.post_id
-                                            AND pm.meta_key = 'wpcr_enable' AND pm.meta_value = 1" );
-			*/
-			
-			/* update all pages, since some may have been disabled */
+				
+			/* update all pages, since some may have just disabled the plugin */
 			$pages = $wpdb->get_results( "SELECT `ID` FROM $wpdb->posts AS `p`" );
-											
-            foreach ($pages as $page) {
+			foreach ($pages as $page) {
                 $post = get_post($page->ID);
-                
 				if ($post) {
-					/* TESTING: commenting for now to prevent some plugins from firing tweets/etc when updating */
-					/* wp_update_post($post); */
-					
-					clean_post_cache( $page->ID );
-                }
-				
-				/* just in case to help w3 total cache */
-				if ( defined('W3TC_DIR') ) {
-					require_once W3TC_DIR . '/lib/W3/PgCache.php';
-					$w3_pgcache = & W3_PgCache::instance();
-					$w3_pgcache->flush();
-				}
-				
-				/* just in case to help wp super cache */
-                if (function_exists('wp_cache_post_change')) {
-                    wp_cache_post_change( $page->ID );
+					clean_post_cache($page->ID);
+					wp_update_post($post); /* comment to prevent some plugins from firing tweets/etc when updating, can have side effects */
                 }
             }
     }
@@ -262,11 +239,9 @@ class WPCustomerReviewsAdmin
 
             if (isset($this->p->page) && ( $this->p->page == 'wpcr_view_reviews' || $this->p->page == 'wpcr_options' ) ) {
                 wp_register_script('wp-customer-reviews-admin',$pluginurl.'wp-customer-reviews-admin.js',array('jquery'),$this->plugin_version);
-                wp_enqueue_script('wp-customer-reviews-admin');
-                wp_register_style('wp-customer-reviews',$pluginurl.'wp-customer-reviews.css',array(),$this->plugin_version);        
-                wp_enqueue_style('wp-customer-reviews');
-                wp_register_style('wp-customer-reviews-admin',$pluginurl.'wp-customer-reviews-admin.css',array(),$this->plugin_version);        
-                wp_enqueue_style('wp-customer-reviews-admin');
+				wp_register_style('wp-customer-reviews-admin',$pluginurl.'wp-customer-reviews-admin.css',array(),$this->plugin_version);  
+				wp_enqueue_script('wp-customer-reviews-admin');
+				wp_enqueue_style('wp-customer-reviews-admin');
             }
 	}
 	
@@ -1097,7 +1072,7 @@ class WPCustomerReviewsAdmin
                             $custom_count = count($this->options['field_custom']); /* used for insert as well */
                             $custom_unserialized = @unserialize($review->custom_fields);
                             if ($custom_unserialized !== false)
-                            {
+                            {							
                                 for ($i = 0; $i < $custom_count; $i++)
                                 {
                                     $custom_field_name = $this->options['field_custom'][$i];

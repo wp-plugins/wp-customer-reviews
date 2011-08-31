@@ -3,7 +3,7 @@
  * Plugin Name: WP Customer Reviews
  * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.4.1
+ * Version: 2.4.2
  * Revision Date: August 31, 2011
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.3
@@ -57,12 +57,18 @@ class WPCustomerReviews {
         $this->dbtable = $wpdb->prefix . $this->dbtable;
         $this->plugin_version = $this->plugin_get_version();
 
-        add_action('the_content', array(&$this, 'do_the_content'), 10); /* 10 prevents a conflict with some odd themes */
-        add_action('init', array(&$this, 'init'));
+        add_action('the_content', array(&$this, 'do_the_content'), 10); /* prio 10 prevents a conflict with some odd themes */
+        add_action('init', array(&$this, 'init')); /* init also tries to insert script/styles */
         add_action('admin_init', array(&$this, 'admin_init'));
                 
-        add_action('wp_print_styles',array(&$this, 'add_style')); /* add style */
-        add_action('template_redirect',array(&$this, 'add_script')); /* add script */
+		/* try multiple methods of inserting our scripts and styles */
+        /*
+		add_action('wp_print_styles',array(&$this, 'add_style_script'));
+		add_action('wp_print_scripts',array(&$this, 'add_style_script'));
+		add_action('wp_head',array(&$this, 'add_style_script'), 0);
+		*/
+		
+        add_action('template_redirect',array(&$this, 'template_redirect')); /* handle redirects and form posts, and add style/script if needed */
         
         add_action('admin_menu', array(&$this, 'addmenu'));
         add_action('wp_ajax_update_field', array(&$this, 'admin_view_reviews')); /* special ajax stuff */
@@ -301,17 +307,15 @@ class WPCustomerReviews {
         return false;
     }
     
-    function add_style() {
+    function add_style_script() {
         /* to prevent compatibility issues and for shortcodes, add to every page */
         wp_enqueue_style('wp-customer-reviews');
+		wp_enqueue_script('wp-customer-reviews');
     }
-    
-    function add_script() {                
-        /* to prevent compatibility issues and for shortcodes, add to every page */
-        wp_enqueue_script('wp-customer-reviews');
-        
-        /* do this here so we can redirect cleanly */
-        
+	
+	function template_redirect() {
+	
+		/* do this in template_redirect so we can try to redirect cleanly */
         global $post;
         if (!isset($post) || !isset($post->ID)) {
             $post = new stdClass();
@@ -326,8 +330,6 @@ class WPCustomerReviews {
             }
         }
         
-        /* do this here so we can redirect cleanly */
-        
         $GET_P = "submitwpcr_$post->ID";
 
         if ($post->ID > 0 && isset($this->p->$GET_P) && $this->p->$GET_P == $this->options['submit_button_text'])
@@ -339,7 +341,7 @@ class WPCustomerReviews {
             $cookie = array('wpcr_status_msg' => $status_msg);
             $this->wpcr_redirect($url, $cookie);
         }
-    }
+	}
     
     function rand_string($length) {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -632,7 +634,7 @@ class WPCustomerReviews {
         }
         
         if (count($reviews) == 0) {
-            $reviews_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>';
+            /* $reviews_content .= '<p>There are no reviews yet. Be the first to leave yours!</p>'; */
         } else {
 
             $this->get_aggregate_reviews($postid);
@@ -716,10 +718,10 @@ class WPCustomerReviews {
                     if (!is_array($custom_fields_unserialized)) {
                         $custom_fields_unserialized = array();
                     }
-
+					
                     foreach ($this->options['field_custom'] as $i => $val) {  
                         if ( isset($custom_fields_unserialized[$val]) ) {
-                            $show = $this->options['show_custom'][$i];
+                            $show = $this->options['show_custom'][$i];							
                             if ($show == 1 && $custom_fields_unserialized[$val] != '') {
                                 $custom_shown .= "<div class='wpcr_fl'>" . $val . ': ' . $custom_fields_unserialized[$val] . '&nbsp;&bull;&nbsp;</div>';
                             }
@@ -988,7 +990,7 @@ class WPCustomerReviews {
         }
 
         foreach ($this->options['ask_custom'] as $i => $val) {
-            if ( isset($this->options['require_custom'][$i]) ) {
+            if ( isset($this->options['ask_custom'][$i]) ) {
                 if ($val == 1) {
                     if ($this->options['require_custom'][$i] == 1) {
                         $req = '*';
@@ -1173,12 +1175,12 @@ class WPCustomerReviews {
         }
         /* end - server-side validation */
 
-        $custom_insert = array();
-        for ($i = 0; $i < $custom_count; $i++) { 
+        $custom_insert = array();		
+        for ($i = 0; $i < $custom_count; $i++) {		
             if ($this->options['ask_custom'][$i] == 1) {
                 $name = $custom_fields[$i];
-                $custom_i = "custom_$i";
-                if ( isset($this->p->$custom_i) && isset($custom_insert[$name]) ) {
+                $custom_i = "custom_$i";				
+                if ( isset($this->p->$custom_i) ) {
                     $custom_insert[$name] = ucfirst($this->p->$custom_i);
                 }
             }
@@ -1255,6 +1257,8 @@ class WPCustomerReviews {
         
         wp_register_style('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.css', array(), $this->plugin_version);
         wp_register_script('wp-customer-reviews', $this->getpluginurl() . 'wp-customer-reviews.js', array('jquery'), $this->plugin_version);
+		/* add style and script here if needed for some theme compatibility */
+		$this->add_style_script();
     }
     
     function shortcode_wpcr_insert() {

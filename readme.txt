@@ -55,9 +55,16 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.4.2 =
+* [Fix] Reverting change - We will use the wp_update_post function to trigger caching plugins/WP to refresh their cache
+* [Fix] Plugin was not honoring asking without requiring custom fields
+* [Fix] Plugin was not saving data that was entered into custom fields
+* [Update] We will no longer show "There are no reviews yet" verbiage, since shortcodes can do odd things. We may add this back in with a future update
+* [Update] Added multiple methods of adding plugin CSS/JS into theme header
+
 = 2.4.1 =
-* [Fix] Admin - Minor fix for a user-reported error in admin.
-* [Update] An update to prevent firing of wp_update_post hooks. Please report any issues with cached pages not updating.
+* [Fix] Admin - Minor fix for a user-reported error in admin
+* [Update] An update to prevent firing of wp_update_post hooks. Please report any issues with cached pages not updating
 
 = 2.4.0 =
 * [Fix] Admin - Some checkbox plugin settings could not be saved
