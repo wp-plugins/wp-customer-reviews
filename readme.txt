@@ -1,7 +1,7 @@
 === WP Customer Reviews ===
 Contributors: bompus
 Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
-Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, ratings, review widget, widget, hproduct, product, snippet, snippets, wordpressmu, wpmu, mu
+Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, testimony, reference, customer, business, client, ratings, review widget, widget, hproduct, product, snippet, snippets, wordpressmu, wpmu, mu
 Requires at least: 2.8.6
 Tested up to: 3.3
 Stable tag: trunk
@@ -18,12 +18,13 @@ There are many sites that are crawling for user-generated reviews now, including
 * Multiple anti-spam measures to prevent automated spambots from submitting reviews.
 * Provides a configurable `Business hCard`, to help identify all pages of your site as belonging to your business.
 * Completely customizable, including which fields to ask for, require, and show.
-* Works with caching plugins and all themes.
+* Shortcodes available for inserting reviews and review form on any page or widget.
+* Works with caching plugins and a majority of themes.
 * Includes an external stylesheet so you can modify it to better fit your theme.
 * Reviews can be edited by admin for content and date.
 * Admin responses can be made and shown under each review.
-* Support for adding your own custom fields with one click.
-* The plugin can be used on more than one page.
+* Support for adding your own custom fields.
+* The plugin can be used on more than one page, and can be used on posts.
 * Supports both `Business` and `Product` hReview types.
 * Shows aggregate reviews microformat (`hReview-aggregate`).
 * Fast and lightweight, even including the star rating image. This plugin will not slow down your blog.
