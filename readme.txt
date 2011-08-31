@@ -54,6 +54,10 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.4.1 =
+* [Fix] Admin - Minor fix for a user-reported error in admin.
+* [Update] An update to prevent firing of wp_update_post hooks. Please report any issues with cached pages not updating.
+
 = 2.4.0 =
 * [Fix] Admin - Some checkbox plugin settings could not be saved
 
@@ -98,5 +102,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 2.4.0 =
+= 2.4.1 =
 Several fixes for compatibility with themes and plugins

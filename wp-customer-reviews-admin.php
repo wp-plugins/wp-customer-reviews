@@ -104,8 +104,6 @@ class WPCustomerReviewsAdmin
 	
 	function real_admin_save_post($post_id) {
             global $meta_box,$wpdb;
-            
-            
 
             // check autosave
             if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -121,24 +119,27 @@ class WPCustomerReviewsAdmin
                 return $post_id;
             }
 
-            foreach ($meta_box['fields'] as $field) {
-                
-                if ( isset($this->p->post_title) ) {
-                    $old = get_post_meta($post_id, $field['id'], true);
-                    
-                    if (isset($this->p->$field['id'])) {
-                        $new = $this->p->$field['id'];
-                        if ($new && $new != $old) {
-                            update_post_meta($post_id, $field['id'], $new);
-                        } elseif ($new == '' && $old) {
-                            delete_post_meta($post_id, $field['id'], $old);
-                        }
-                    } else {
-                        delete_post_meta($post_id, $field['id'], $old);
-                    }
-                }
-                
-            }
+			if ( isset($meta_box) && isset($meta_box['fields']) && is_array($meta_box['fields']) )
+			{
+				foreach ($meta_box['fields'] as $field) {
+					
+					if ( isset($this->p->post_title) ) {
+						$old = get_post_meta($post_id, $field['id'], true);
+						
+						if (isset($this->p->$field['id'])) {
+							$new = $this->p->$field['id'];
+							if ($new && $new != $old) {
+								update_post_meta($post_id, $field['id'], $new);
+							} elseif ($new == '' && $old) {
+								delete_post_meta($post_id, $field['id'], $old);
+							}
+						} else {
+							delete_post_meta($post_id, $field['id'], $old);
+						}
+					}
+					
+				}
+			}
 
             return $post_id;
 	}
@@ -219,24 +220,41 @@ class WPCustomerReviewsAdmin
         }
 	
 	function force_update_cache() {
-        /* update pages we are using, this will force it to update with caching plugins */
-
-            global $wpdb;
-
+			global $wpdb;
+	
+			/* update all pages we are using, this will force it to update with caching plugins */
+			/*
             $pages = $wpdb->get_results( "SELECT `ID` FROM $wpdb->posts AS `p`, $wpdb->postmeta AS `pm`
                                             WHERE p.ID = pm.post_id
                                             AND pm.meta_key = 'wpcr_enable' AND pm.meta_value = 1" );
-
+			*/
+			
+			/* update all pages, since some may have been disabled */
+			$pages = $wpdb->get_results( "SELECT `ID` FROM $wpdb->posts AS `p`" );
+											
             foreach ($pages as $page) {
                 $post = get_post($page->ID);
-                if ($post) {           
-                    wp_update_post($post); /* the magic */        
+                
+				if ($post) {
+					/* TESTING: commenting for now to prevent some plugins from firing tweets/etc when updating */
+					/* wp_update_post($post); */
+					
+					clean_post_cache( $page->ID );
                 }
+				
+				/* just in case to help w3 total cache */
+				if ( defined('W3TC_DIR') ) {
+					require_once W3TC_DIR . '/lib/W3/PgCache.php';
+					$w3_pgcache = & W3_PgCache::instance();
+					$w3_pgcache->flush();
+				}
+				
+				/* just in case to help wp super cache */
                 if (function_exists('wp_cache_post_change')) {
-                    wp_cache_post_change( $page->ID ); /* just in case to help wp super cache */
+                    wp_cache_post_change( $page->ID );
                 }
             }
-        }
+    }
 
 	/* some admin styles can override normal styles for inplace edits */
 	function enqueue_admin_stuff() {
@@ -431,8 +449,8 @@ class WPCustomerReviewsAdmin
                     <input type="submit" class="button-primary" value="OK!" name="submit" />&nbsp;
                     <input type="submit" class="button-primary" value="No Thanks!" name="submit" />
                 </form>
-                <p style="color:#b00;">Please click "OK!" or "No Thanks!" above to access the plugin settings.</p>
-            </div>			
+                <p style="color:#BE5409;font-size:14px;font-weight:bold;"><br />Click "OK!" or "No Thanks!" above to access the full plugin settings.</p>
+            </div>
         </div>';
     }
 	
