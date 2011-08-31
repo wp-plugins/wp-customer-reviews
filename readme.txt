@@ -110,5 +110,5 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Upgrade Notice ==
 
-= 2.4.1 =
+= 2.4.2 =
 Several fixes for compatibility with themes and plugins
