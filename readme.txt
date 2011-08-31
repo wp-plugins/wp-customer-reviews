@@ -1,7 +1,7 @@
 === WP Customer Reviews ===
 Contributors: bompus
 Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
-Tags: hreview, microformat, microformats, rdfa, hcard, reviews, testimonials, plugin, google, rating, review, review box, seo, business, testimonial, testimony, reference, customer, business, client, ratings, review widget, widget, hproduct, product, snippet, snippets, wordpressmu, wpmu, mu
+Tags: business, google, hcard, hproduct, hreview, microformat, microformats, mu, places, plugin, product, rating, ratings, rdfa, review, review box, review widget, reviews, seo, service, shortcode, snippet, snippets, testimonial, testimonials, widget, wordpressmu, wpmu
 Requires at least: 2.8.6
 Tested up to: 3.3
 Stable tag: trunk
