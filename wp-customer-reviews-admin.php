@@ -111,7 +111,7 @@ class WPCustomerReviewsAdmin
             }
 
             // check permissions
-            if ('page' == $this->p->post_type) {
+            if ( isset($this->p->post_type) && $this->p->post_type == 'page' ) {
                 if (!current_user_can('edit_page', $post_id)) {
                     return $post_id;
                 }
@@ -220,6 +220,7 @@ class WPCustomerReviewsAdmin
         }
 	
 	function force_update_cache() {
+			return; /* testing to increase performance */
 			global $wpdb;
 				
 			/* update all pages, since some may have just disabled the plugin */

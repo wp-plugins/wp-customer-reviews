@@ -3,8 +3,8 @@ Contributors: bompus
 Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: business, google, hcard, hproduct, hreview, microformat, microformats, mu, places, plugin, product, rating, ratings, rdfa, review, review box, review widget, reviews, seo, service, shortcode, snippet, snippets, testimonial, testimonials, widget, wordpressmu, wpmu
 Requires at least: 2.8.6
-Tested up to: 3.3
-Stable tag: trunk
+Tested up to: 3.4
+Stable tag: 2.4.3
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -55,6 +55,10 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.4.3 =
+* [Fix] We will leave clearing any caching plugins up to the user
+* [Fix] Prevented some PHP notices in admin area
+
 = 2.4.2 =
 * [Fix] Reverting change - We will use the wp_update_post function to trigger caching plugins/WP to refresh their cache
 * [Fix] Plugin was not honoring asking without requiring custom fields
@@ -95,20 +99,7 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 = 2.3.5 =
 * [Fix] The previous release had broken some of the styles, since it output the reviews outside of their expected container.
 
-= 2.3.4 =
-* [Fix] Theme compatibility updates
-* [Fix] Last characters of the last custom field was being cut off
-* [Update] Several internal cleanups and refactorings
-* [Update] Additional custom fields have been added for a total of 6
-* [Update] CSS and JS are back to only being loaded when on an enabled page/post
-* [Update] Cleaning up custom field display for better separation on page display
-* [Update] Added setting to enable plugin for all future posts/pages
-* [Update] Added buttons to enable/disable plugin for all existing posts/pages
-* [Update] Admin can now respond to reviews. (Thank you Benjamin W for a great user contribution)
-* [Update] Beta testing - Shortcode has been added for displaying the reviews/form anywhere in any page
-* [Update] Beta testing - Shortcode has been added for displaying review contents from any page in any other page
-
 == Upgrade Notice ==
 
-= 2.4.2 =
+= 2.4.3 =
 Several fixes for compatibility with themes and plugins
