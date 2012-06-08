@@ -111,7 +111,7 @@ class WPCustomerReviewsAdmin
             }
 
             // check permissions
-            if ( isset($this->p->post_type) && $this->p->post_type == 'page' ) {
+            if ('page' == $this->p->post_type) {
                 if (!current_user_can('edit_page', $post_id)) {
                     return $post_id;
                 }
@@ -220,7 +220,6 @@ class WPCustomerReviewsAdmin
         }
 	
 	function force_update_cache() {
-			return; /* testing to increase performance */
 			global $wpdb;
 				
 			/* update all pages, since some may have just disabled the plugin */
@@ -681,6 +680,17 @@ class WPCustomerReviewsAdmin
         $this->security();
 
         $msg = '';
+		
+		// make sure the db is created
+		global $wpdb;
+		$exists = $wpdb->get_var("SHOW TABLES LIKE '$this->dbtable'");
+		if ($exists != $this->dbtable) {
+			$this->parentClass->check_migrate(true);
+			$exists = $wpdb->get_var("SHOW TABLES LIKE '$this->dbtable'");
+			if ($exists != $this->dbtable) {
+				print "<br /><br /><br />COULD NOT CREATE DATABASE TABLE, PLEASE REPORT THIS ERROR";
+			}
+		}
         
         if (!isset($this->p->Submit)) { $this->p->Submit = ''; }
         
