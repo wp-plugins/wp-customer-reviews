@@ -12,6 +12,8 @@ WP Customer Reviews allows your customers and visitors to leave reviews or testi
 
 There are many sites that are crawling for user-generated reviews now, including Google Places and Google Local Search. WP Customer Reviews allows you to setup a specific page on your blog to receive customer testimonials for your business/service OR to write reviews about multiple products (using multiple pages).
 
+**Big News! Version 3 is on the way.** [Click here for details](http://www.gowebsolutions.com/wp-customer-reviews/?from=wpcr_directory_notice_1 "Click here for details")
+
 * WP Multisite and Multiuser (WPMU / WPMS / Wordpress MU) compatible.
 * All submissions are moderated, which means that YOU choose which reviews get shown.
 * Reviews are displayed to visitors in a friendly format, but search engines see the hReview microformat (and RDFa soon!)

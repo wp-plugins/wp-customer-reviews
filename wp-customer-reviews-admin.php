@@ -15,24 +15,41 @@ class WPCustomerReviewsAdmin
 	}
 	
 	function real_admin_init() {
-	
-            $this->parentClass->init();
-            $this->enqueue_admin_stuff();
-            
-            register_setting( 'wpcr_options', 'wpcr_options' );
-	
-            /* used for redirecting to settings page upon initial activation */
-            if (get_option('wpcr_gotosettings', false)) {
-                delete_option('wpcr_gotosettings');
-                unregister_setting('wpcr_gotosettings', 'wpcr_gotosettings');
+		$this->parentClass->init();
+		$this->enqueue_admin_stuff();
+		
+		register_setting( 'wpcr_options', 'wpcr_options' );
 
-                /* no auto settings redirect if upgrading */
-                if ( isset($this->p->action) && $this->p->action == 'activate-plugin' ) { return false; }
+		/* used for redirecting to settings page upon initial activation */
+		if (get_option('wpcr_gotosettings', false)) {
+			delete_option('wpcr_gotosettings');
+			unregister_setting('wpcr_gotosettings', 'wpcr_gotosettings');
 
-                $url = get_admin_url().'options-general.php?page=wpcr_options';
-                $this->parentClass->wpcr_redirect($url);
-            }
+			/* no auto settings redirect if upgrading */
+			if ( isset($this->p->action) && $this->p->action == 'activate-plugin' ) { return false; }
+
+			$url = get_admin_url().'options-general.php?page=wpcr_options';
+			$this->parentClass->wpcr_redirect($url);
+		}
+		
+		$this->notice_ignore(); /* admin notices */
 	}
+	
+	function notice_ignore() {
+		global $current_user;
+		$user_id = $current_user->ID;
+		/* If user clicks to ignore the notice, add to user meta */
+		if ( isset($_GET['wpcr_notice_1']) ) {
+			$n1 = $_GET['wpcr_notice_1'];
+			if ( $n1 == 'redir' ) {
+				wp_redirect('http://www.gowebsolutions.com/wp-customer-reviews/?from=wpcr_admin_notice_1');
+				exit();
+			} else if ( $n1 == 'ignore' ) {
+				add_user_meta($user_id, 'wpcr_admin_notice_read_1', 'true', true);
+			}
+		}
+	}
+	/* end - admin notices */
 	
 	function wpcr_add_meta_box() {
 		global $meta_box;
@@ -749,9 +766,23 @@ class WPCustomerReviewsAdmin
                 <h3 style="cursor:default;">About WP Customer Reviews</h3>
                 <div style="padding:0 10px; background:#ffffff;">
                     <p>
-                        Version: <strong>'.$this->plugin_version.'</strong><br /><br />
+                        Version: <strong>'.$this->plugin_version.'</strong>
+					</p>';
+
+					echo '
+					<p style="margin-top:10px !important;padding:3px 5px 3px 5px !important;background:#fffbcc;border:1px solid #e6db55;color:#555;">
+						WP Customer Reviews: Big News! Version 3 is on the way. 
+						<a style="font-weight:bold;" target="_blank" href="http://www.gowebsolutions.com/wp-customer-reviews/?from=wpcr_plugin_notice_1">Click here for details</a> and to submit your feature requests.
+					</p>
+					';
+						
+					echo '
+					<p style="margin-top:10px !important;">
                         WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled and can help crawlers such as Google Local Search and Google Places to index these reviews. The plugin also allows for your business information, in hCard microformat, to be (non-visibly) added to all pages.
                     </p>
+					';
+					
+					echo '
                     <br />
                 </div>
                 <div style="padding:6px; background:#eaf2fa;">
