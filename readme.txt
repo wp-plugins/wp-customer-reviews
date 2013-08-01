@@ -4,13 +4,15 @@ Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
 Tags: business, google, hcard, hproduct, hreview, microformat, microformats, mu, places, plugin, product, rating, ratings, rdfa, review, review box, review widget, reviews, seo, service, shortcode, snippet, snippets, testimonial, testimonials, widget, wordpressmu, wpmu
 Requires at least: 2.8.6
 Tested up to: 3.6
-Stable tag: 2.4.6
+Stable tag: 2.4.7
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
 == Description ==
 
 There are many sites that are crawling for user-generated reviews now, including Google Places and Google Local Search. WP Customer Reviews allows you to setup a specific page on your blog to receive customer testimonials for your business/service OR to write reviews about multiple products (using multiple pages).
+
+**Big News! Version 3 is on the way.** [Click here for details](http://www.gowebsolutions.com/wp-customer-reviews/?from=wpcr_directory_notice_1 "Click here for details")
 
 * WP Multisite and Multiuser (WPMU / WPMS / Wordpress MU) compatible.
 * All submissions are moderated, which means that YOU choose which reviews get shown.
@@ -55,6 +57,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 == Changelog ==
 
+= 2.4.7 =
+* [Fix] Menu item in Admin Dashboard hides other plugin menu items
+
 = 2.4.6 =
 * [Fix] Fixed an issue where a non-breaking space character was not properly output in the footer aggregate review
 
@@ -98,9 +103,6 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * [Update] Shortcode implementation has been updated. Any pages using shortcodes will need to be updated to use the new format
 * [Update] The plugin should now handle activation and upgrades better
 * [Update] MANY bug fixes, cleanups, performance fixes, and internal changes
-
-= 2.3.6 =
-* [Fix] 2.3.4 had also broken pagination. This should now be working again.
 
 == Upgrade Notice ==
 

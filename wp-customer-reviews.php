@@ -3,8 +3,8 @@
  * Plugin Name: WP Customer Reviews
  * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.4.6
- * Revision Date: May 30, 2013
+ * Version: 2.4.7
+ * Revision Date: July 26, 2013
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.6
  * Author: Go Web Solutions
@@ -60,13 +60,8 @@ class WPCustomerReviews {
         add_action('the_content', array(&$this, 'do_the_content'), 10); /* prio 10 prevents a conflict with some odd themes */
         add_action('init', array(&$this, 'init')); /* init also tries to insert script/styles */
         add_action('admin_init', array(&$this, 'admin_init'));
-                
-		/* try multiple methods of inserting our scripts and styles */
-        /*
-		add_action('wp_print_styles',array(&$this, 'add_style_script'));
-		add_action('wp_print_scripts',array(&$this, 'add_style_script'));
-		add_action('wp_head',array(&$this, 'add_style_script'), 0);
-		*/
+        
+		add_action('admin_notices', array(&$this, 'notice_init')); /* admin notices */
 		
         add_action('template_redirect',array(&$this, 'template_redirect')); /* handle redirects and form posts, and add style/script if needed */
         
@@ -76,6 +71,27 @@ class WPCustomerReviews {
         
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array(&$this, 'plugin_settings_link'));
     }
+	
+	/* begin - admin notices */
+	/* keep out of admin file */
+	function notice_init() {
+		global $current_user;
+		$user_id = $current_user->ID;
+		
+		$url = get_admin_url().'options-general.php?page=wpcr_options';
+		
+		/* Check if the user has already clicked to ignore the message using meta */
+		if ( ! get_user_meta($user_id, 'wpcr_admin_notice_read_1') ) {
+			echo '<div class="updated"><p>'; 
+			echo '
+				WP Customer Reviews: Big News! Version 3 is on the way. 
+				<a style="font-weight:bold;" target="_blank" href="'.$url.'&wpcr_notice_1=redir">Click here for details</a> and to submit your feature requests.&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; 
+				<a href="'.$url.'&wpcr_notice_1=ignore">Hide Notice</a>
+			';
+			echo "</p></div>";
+		}
+	}
+	/* end - admin notices */
 
     /* keep out of admin file */
     function plugin_settings_link($links) {
@@ -88,8 +104,7 @@ class WPCustomerReviews {
     /* keep out of admin file */
     function addmenu() {
         add_options_page('Customer Reviews', '<img src="' . $this->getpluginurl() . 'star.png" />&nbsp;Customer Reviews', 'manage_options', 'wpcr_options', array(&$this, 'admin_options'));
-        add_menu_page('Customer Reviews', 'Customer Reviews', 'edit_others_posts', 'wpcr_view_reviews', array(&$this, 'admin_view_reviews'), $this->getpluginurl() . 'star.png', 50); /* 50 should be underneath comments */
-
+        add_menu_page('Customer Reviews', 'Customer Reviews', 'edit_others_posts', 'wpcr_view_reviews', array(&$this, 'admin_view_reviews'), $this->getpluginurl() . 'star.png', '50.91'); /* try to resolve issues with other plugins */
         global $WPCustomerReviewsAdmin;
         $this->include_admin(); /* include admin functions */
         $WPCustomerReviewsAdmin->wpcr_add_meta_box();
