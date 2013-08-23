@@ -1,10 +1,10 @@
 <?php
 /*
  * Plugin Name: WP Customer Reviews
- * Plugin URI: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
+ * Plugin URI: http://www.gowebsolutions.com/wp-customer-reviews/
  * Description: WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
- * Version: 2.4.7
- * Revision Date: July 26, 2013
+ * Version: 2.4.8
+ * Revision Date: August 22, 2013
  * Requires at least: WP 2.8.6
  * Tested up to: WP 3.6
  * Author: Go Web Solutions
@@ -75,6 +75,9 @@ class WPCustomerReviews {
 	/* begin - admin notices */
 	/* keep out of admin file */
 	function notice_init() {
+	
+		return true; /* removed per WP guidelines */
+	
 		global $current_user;
 		$user_id = $current_user->ID;
 		
@@ -188,7 +191,7 @@ class WPCustomerReviews {
             'show_hcard' => 1,
             'show_hcard_on' => 1,
             'submit_button_text' => 'Submit your review',
-            'support_us' => 1,
+            'support_us' => 0,
             'title_tag' => 'h2'
         );
         
@@ -908,7 +911,7 @@ class WPCustomerReviews {
         }
 
         if ($this->options['support_us'] == 1) {
-            $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
+            $the_content .= '<div class="wpcr_clear wpcr_power">Powered by <strong><a href="http://www.gowebsolutions.com/wp-customer-reviews/">WP Customer Reviews</a></strong></div>';
         }
         
         $the_content .= $this->aggregate_footer(); /* check if we need to show something in the footer also */

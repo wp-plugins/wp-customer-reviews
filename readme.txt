@@ -1,10 +1,10 @@
 === WP Customer Reviews ===
 Contributors: bompus
-Donate link: http://www.gowebsolutions.com/plugins/wp-customer-reviews/
+Donate link: http://www.gowebsolutions.com/wp-customer-reviews/
 Tags: business, google, hcard, hproduct, hreview, microformat, microformats, mu, places, plugin, product, rating, ratings, rdfa, review, review box, review widget, reviews, seo, service, shortcode, snippet, snippets, testimonial, testimonials, widget, wordpressmu, wpmu
 Requires at least: 2.8.6
 Tested up to: 3.6
-Stable tag: 2.4.7
+Stable tag: 2.4.8
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
 
@@ -35,7 +35,7 @@ There are many sites that are crawling for user-generated reviews now, including
 
 This is a community-driven , donation-funded plugin. Almost every new feature that has been added was due to the generous support and suggestions of our users. If you have a suggestion or question, do not hesitate to ask in our forum.
 
-More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plugins/wp-customer-reviews/)
+More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/wp-customer-reviews/)
 
 == Installation ==
 
@@ -56,6 +56,9 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 * If you have any feedback, suggestions, questions, or issues, please: [**Visit our support forum**](http://wordpress.org/tags/wp-customer-reviews?forum_id=10)
 
 == Changelog ==
+
+= 2.4.8 =
+* [Update] Updates to comply with WP plugin directory guidelines
 
 = 2.4.7 =
 * [Fix] Menu item in Admin Dashboard hides other plugin menu items
@@ -94,15 +97,6 @@ More information at: [**WP Customer Reviews**](http://www.gowebsolutions.com/plu
 
 = 2.3.8 =
 * [Fix] 2.3.7 had introduced a redirect loop when loaded on a new page with no reviews
-
-= 2.3.7 =
-* [Fix] Admin - Using the enter key with in-place editing of reviews will no longer refresh the page
-* [Fix] A recent update was forcing review pages to always jump to the review form. This has been corrected
-* [Fix] Several refactorings to increase compatibility with themes and other plugins
-* [Fix] Plugin now works without causing any NOTICE warnings if E_NOTICE is enabled in PHP configuration
-* [Update] Shortcode implementation has been updated. Any pages using shortcodes will need to be updated to use the new format
-* [Update] The plugin should now handle activation and upgrades better
-* [Update] MANY bug fixes, cleanups, performance fixes, and internal changes
 
 == Upgrade Notice ==
 

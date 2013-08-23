@@ -786,7 +786,7 @@ class WPCustomerReviewsAdmin
                     <br />
                 </div>
                 <div style="padding:6px; background:#eaf2fa;">
-                    Plugin Homepage: <a target="_blank" href="http://www.gowebsolutions.com/plugins/wp-customer-reviews/">http://www.gowebsolutions.com/plugins/wp-customer-reviews/</a><br /><br />
+                    Plugin Homepage: <a target="_blank" href="http://www.gowebsolutions.com/wp-customer-reviews/">http://www.gowebsolutions.com/wp-customer-reviews/</a><br /><br />
                     Support Forum: <a target="_blank" href="http://wordpress.org/tags/wp-customer-reviews?forum_id=10">http://wordpress.org/tags/wp-customer-reviews?forum_id=10</a><br /><br />
                     Support Email: <a href="mailto:aaron@gowebsolutions.com">aaron@gowebsolutions.com</a><br /><br />
                     <div style="color:#BE5409;font-weight:bold;">If you like this plugin, please <a target="_blank" href="http://wordpress.org/extend/plugins/wp-customer-reviews/">login and rate it 5 stars here</a> or consider a donation via our plugin homepage.</div>
