@@ -3,7 +3,7 @@ Contributors: bompus
 Donate link: http://www.gowebsolutions.com/wp-customer-reviews/
 Tags: business, google, hcard, hproduct, hreview, microformat, microformats, mu, places, plugin, product, rating, ratings, rdfa, review, review box, review widget, reviews, seo, service, shortcode, snippet, snippets, testimonial, testimonials, widget, wordpressmu, wpmu
 Requires at least: 2.8.6
-Tested up to: 3.6
+Tested up to: 4.2
 Stable tag: 2.4.8
 
 WP Customer Reviews allows your customers and visitors to leave reviews or testimonials of your services. Reviews are Microformat enabled (hReview).
